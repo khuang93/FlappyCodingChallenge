@@ -7,6 +7,9 @@
 #include <pcl/cloud_iterator.h>
 #include <pcl/filters/passthrough.h>
 #include <pcl-1.7/pcl/filters/extract_indices.h>
+#include <algorithm>
+#include <functional>
+#include <array>
 
 
 
@@ -105,6 +108,16 @@ void filterPCL(PointCloudXY::Ptr mypcl, float vx, float vy, float flappyPosX){
   extract.setNegative(true);
   extract.filter(*mypcl);
 
+    //   std::sort(mypcl->points.begin(),mypcl->points.end(), [](pcl::PointXYZ a, pcl::PointXYZ b) {
+    //     return a->x > b->x;   
+    // });
+  // struct {
+  //       bool operator()(pcl::PointXYZ a, pcl::PointXYZ b) const
+  //       {   
+  //           return a.x < b.x;
+  //       }   
+  //   } customLess;
+  //   std::sort(mypcl->points.begin(),mypcl->points.end(), customLess);
 
   // pcl::PassThrough<pcl::PointXYZ> pass;
   // pass.setInputCloud(mypcl);
@@ -122,8 +135,6 @@ void updateFlappyPos(Point& flappyPos, float vx, float vy){
   flappyPos.y+=dY;
 }
 
-
-//extern std::vector<Point> myPCL;
 
 int main(int argc, char **argv)
 {
