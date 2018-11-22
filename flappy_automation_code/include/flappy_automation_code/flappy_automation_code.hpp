@@ -4,6 +4,9 @@
 #include <ros/ros.h>
 #include "sensor_msgs/LaserScan.h"
 #include "geometry_msgs/Vector3.h"
+#include <pcl_ros/point_cloud.h>
+
+typedef pcl::PointCloud<pcl::PointXY> PointCloud;
 
 //Ros nodehandle
 ros::NodeHandle* nh_= NULL;
@@ -13,6 +16,11 @@ ros::Publisher pub_acc_cmd;
 ros::Subscriber sub_vel;
 //Subscriber for laser scan
 ros::Subscriber sub_laser_scan;
+
+//publisher flappy position
+ros::Publisher pub_flappy_pos;
+//publisher global pcl
+ros::Publisher pub_pcl;
 
 struct Point{
   float x; //in body coordinate, distance from flappy
@@ -30,7 +38,7 @@ void velCallback(const geometry_msgs::Vector3::ConstPtr& msg);
 void laserScanCallback(const sensor_msgs::LaserScan::ConstPtr& msg);
 void convertLaserScan2PCL(std::vector<Point>& out, std::vector<float> ranges, float range_max, float range_min, float angle_min, float angle_max, float angle_increment, int number_laser_rays);
 bool isValidPoint(float range, float range_max, float range_min);
-void updatePCL();
+void updatePCL(geometry_msgs::Vector3::ConstPtr& msg);
 void updateFlappyPos();
 
 #endif

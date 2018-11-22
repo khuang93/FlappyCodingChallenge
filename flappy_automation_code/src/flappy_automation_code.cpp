@@ -8,6 +8,7 @@
 
 
 
+
 void initNode()
 {
   //Initialization of nodehandle
@@ -16,6 +17,10 @@ void initNode()
   pub_acc_cmd = nh_->advertise<geometry_msgs::Vector3>("/flappy_acc",1);
   sub_vel = nh_->subscribe<geometry_msgs::Vector3>("/flappy_vel", 1, velCallback);
   sub_laser_scan = nh_->subscribe<sensor_msgs::LaserScan>("/flappy_laser_scan", 1, laserScanCallback);
+
+  //additional state publisher
+  pub_flappy_pos = nh_->advertise<geometry_msgs::Vector3>("/flappy_pos",1);
+  pub_pcl = nh_->advertise<PointCloud>("/PCL",1);
 }
 
 void velCallback(const geometry_msgs::Vector3::ConstPtr& msg)
@@ -23,6 +28,11 @@ void velCallback(const geometry_msgs::Vector3::ConstPtr& msg)
   // msg has the format of geometry_msgs::Vector3
   // Example of publishing acceleration command on velocity velCallback
   geometry_msgs::Vector3 acc_cmd;
+
+  void updatePCL(geometry_msgs::Vector3::ConstPtr& msg);
+
+
+
 
   acc_cmd.x = 1;
   acc_cmd.y = 0;
@@ -69,7 +79,8 @@ bool isValidPoint(float range, float range_max, float range_min){
   return range < range_max && range > range_min;
 }
 
-void updatePCL(){
+void updatePCL(geometry_msgs::Vector3::ConstPtr& msg){
+
 
 }
 
@@ -78,7 +89,7 @@ void updateFlappyPos(){
 }
 
 
-extern std::vector<Point> pcl;
+//extern std::vector<Point> myPCL;
 
 int main(int argc, char **argv)
 {
