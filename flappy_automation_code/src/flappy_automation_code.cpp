@@ -11,19 +11,10 @@
 
 void initNode()
 {
-  //Initialization of nodehandle
-  nh_ = new ros::NodeHandle();
-  //Init publishers and subscribers
-  pub_acc_cmd = nh_->advertise<geometry_msgs::Vector3>("/flappy_acc",1);
-  sub_vel = nh_->subscribe<geometry_msgs::Vector3>("/flappy_vel", 1, velCallback);
-  sub_laser_scan = nh_->subscribe<sensor_msgs::LaserScan>("/flappy_laser_scan", 1, laserScanCallback);
-
-  //additional state publisher
-  pub_flappy_pos = nh_->advertise<geometry_msgs::Vector3>("/flappy_pos",1);
-  pub_pcl = nh_->advertise<PointCloud>("/PCL",1);
+  SubscribeAndPublish SAPObject;
 }
 
-void velCallback(const geometry_msgs::Vector3::ConstPtr& msg)
+void SubscribeAndPublish::velCallback(const geometry_msgs::Vector3::ConstPtr& msg)
 {
   // msg has the format of geometry_msgs::Vector3
   // Example of publishing acceleration command on velocity velCallback
@@ -39,7 +30,7 @@ void velCallback(const geometry_msgs::Vector3::ConstPtr& msg)
   pub_acc_cmd.publish(acc_cmd);
 }
 
-void laserScanCallback(const sensor_msgs::LaserScan::ConstPtr& msg)
+void SubscribeAndPublish::laserScanCallback(const sensor_msgs::LaserScan::ConstPtr& msg)
 {
   //msg has the format of sensor_msgs::LaserScan
   //print laser angle and range
@@ -64,6 +55,15 @@ void laserScanCallback(const sensor_msgs::LaserScan::ConstPtr& msg)
 
 }
 
+
+
+void SubscribeAndPublish::posCallback(const geometry_msgs::Vector3::ConstPtr& msg){
+
+}
+
+void SubscribeAndPublish::pclCallback(const sensor_msgs::PointCloud2::ConstPtr& msg){
+
+}
 void convertLaserScan2PCL(std::vector<Point>& out, std::vector<float> ranges, float range_max, float range_min, float angle_min, float angle_max, float angle_increment, int number_laser_rays){
   for(int i = 0; i < ranges.size(); i++){
     if(isValidPoint(ranges.at(i),range_max, range_min)){
@@ -80,7 +80,7 @@ bool isValidPoint(float range, float range_max, float range_min){
 }
 
 void updatePCL(geometry_msgs::Vector3::ConstPtr& msg){
-
+  //pcl::fromROSMsg() 
 
 }
 
