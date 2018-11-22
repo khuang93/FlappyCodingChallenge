@@ -7,10 +7,27 @@
 #include <pcl_ros/point_cloud.h>
 #include <pcl_conversions/pcl_conversions.h>
 
+struct Point{
+  float x; //in body coordinate, distance from flappy
+  float y; //in absolute coordinate
+  int type; //0 is obstacle, 1 is wall
+  Point(float _x, float _y):x(_x),y(_y){ 
+      type = 0;
+  }
+};
+
+typedef pcl::PointCloud<Point> PointCloudXY;
+
+
 class SubscribeAndPublish
 {
+private:
+    PointCloudXY mypcl;
+    Point flappyPos;
+
 public:
-    SubscribeAndPublish()
+    //Constructor
+    SubscribeAndPublish():flappyPos(Point(0.0f,0.0f)), mypcl(PointCloudXY())
     {
         //Initialization of nodehandle
         nh_ = new ros::NodeHandle();
@@ -22,21 +39,21 @@ public:
         //additional state publisher
         pub_flappy_pos = nh_->advertise<geometry_msgs::Vector3>("/flappy_pos",1);
         pub_pcl = nh_->advertise<sensor_msgs::PointCloud2>("/PCL",1);
-
+        //subscribers
         sub_flappy_pos = nh_->subscribe<geometry_msgs::Vector3>("/flappy_pos",1, &SubscribeAndPublish::posCallback, this);
         sub_pcl = nh_->subscribe<sensor_msgs::PointCloud2>("/PCL",1, &SubscribeAndPublish::pclCallback, this);
     }
 
-/*     void callback(const SUBSCRIBED_MESSAGE_TYPE& input)
+/*  void callback(const SUBSCRIBED_MESSAGE_TYPE& input)
     {
-       // PUBLISHED_MESSAGE_TYPE output;
-        //.... do something with the input and generate the output...
-        //pub_.publish(output);  
+    PUBLISHED_MESSAGE_TYPE output;
+        .... do something with the input and generate the output...
+        pub_.publish(output);  
 
     } */
+
     void velCallback(const geometry_msgs::Vector3::ConstPtr& msg);
     void laserScanCallback(const sensor_msgs::LaserScan::ConstPtr& msg);
-
     void posCallback(const geometry_msgs::Vector3::ConstPtr& msg);
     void pclCallback(const sensor_msgs::PointCloud2::ConstPtr& msg);
 
@@ -64,16 +81,7 @@ private:
 
 
 
-struct Point{
-  float x; //in body coordinate, distance from flappy
-  float y; //in absolute coordinate
-  int type; //0 is obstacle, 1 is wall
-  Point(float _x, float _y):x(_x),y(_y){ 
-      type = 0;
-  }
-};
 
-typedef pcl::PointCloud<Point> PointCloudXY;
 
 void initNode();
 
