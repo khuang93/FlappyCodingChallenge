@@ -35,6 +35,7 @@ private:
     Point flappyPos_prev;
     std::vector<Point> current_pcl;
     const int FPS = 30;
+    double midY=0.0;
 
 public:
     //Constructor
@@ -104,10 +105,14 @@ private:
 void initNode();
 
 
-void convertLaserScan2PCL(PointCloudXY::Ptr mypcl, PointCloudXY::Ptr currentpcl, std::vector<float> ranges, float range_max, float range_min, float angle_min, float angle_max, float angle_increment, int number_laser_rays,  const Point&flappyPos);
+void convertLaserScan2PCL(PointCloudXY::Ptr mypcl, PointCloudXY::Ptr currentpcl,std::vector<Point>& current_pcl, std::vector<float> ranges, float range_max, float range_min, float angle_min, float angle_max, float angle_increment, int number_laser_rays,  const Point&flappyPos);
 bool isValidPoint(float range, float range_max, float range_min);
 void filterPCL(PointCloudXY::Ptr mypcl, PointCloudXY::Ptr currentpcl, float vx, float vy, float flappyPosX);
 void updateFlappyPos(Point& flappyPos, float vx, float vy);
 void savePCL2PLY(PointCloudXY::Ptr mypcl);
+
+bool comparePts (Point i,Point j) { return (i.y<j.y); }
+double getMiddleOfGap(std::vector<Point>& current_pcl);
+
 
 #endif
