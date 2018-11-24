@@ -26,15 +26,26 @@ void SubscribeAndPublish::velCallback(const geometry_msgs::Vector3::ConstPtr& ms
   geometry_msgs::Vector3 acc_cmd;
 
 
-
+  flappyPos_prev=flappyPos;
   updateFlappyPos(flappyPos, msg->x, msg->y);
-  filterPCL(mypcl, msg->x, msg->y,flappyPos.x);
+  filterPCL(mypcl, currentpcl, msg->x, msg->y,flappyPos.x);
 
   ROS_INFO("flappyPos x: %f, y: %f", flappyPos.x,  flappyPos.y);
   for(int i = 0; i < mypcl->size(); i++){
       //if((mypcl->at(i).x-flappyPos.x) < 0) 
       ROS_INFO("PCL x: %f, y: %f", mypcl->at(i).x/* -flappyPos.x */,  mypcl->at(i).y);
+      
   }
+
+  for(int i = 0; i < currentpcl->size(); i++){
+      //if((mypcl->at(i).x-flappyPos.x) < 0)
+      ROS_INFO("CurrentPCL x: %f, y: %f", currentpcl->at(i).x-flappyPos.x,  currentpcl->at(i).y);
+      
+  }
+
+  pcl::io::savePLYFileASCII("pointCloud.ply", *mypcl);
+    pcl::io::savePLYFileASCII("currentpcl.ply", *currentpcl);
+
   acc_cmd.x = 0;
   acc_cmd.y = 0;
   pub_acc_cmd.publish(acc_cmd);
@@ -50,8 +61,9 @@ void SubscribeAndPublish::laserScanCallback(const sensor_msgs::LaserScan::ConstP
   int number_laser_rays = (msg->angle_max-msg->angle_min)/msg->angle_increment + 1;
   ROS_INFO("Laser number_laser_rays: %i", number_laser_rays);
  
+  // projector_.transformLaserScanToPointCloud("base_link",*msg,cloud,listener_);
   
-  convertLaserScan2PCL(mypcl, msg->ranges, msg->range_max, msg->range_min, (float)msg->angle_min, (float)msg->angle_max, (float)msg->angle_increment, number_laser_rays, flappyPos);
+  convertLaserScan2PCL(mypcl, currentpcl, msg->ranges, msg->range_max, msg->range_min, (float)msg->angle_min, (float)msg->angle_max, (float)msg->angle_increment, number_laser_rays, flappyPos_prev);
 
    for(int i = 0; i < number_laser_rays; i++){
     ROS_INFO("Laser range: %f, angle: %f", msg->ranges[i], msg->angle_min+msg->angle_increment*i);
@@ -71,13 +83,14 @@ void SubscribeAndPublish::posCallback(const geometry_msgs::Vector3::ConstPtr& ms
 void SubscribeAndPublish::pclCallback(const sensor_msgs::PointCloud2::ConstPtr& msg){
 
 }
-void convertLaserScan2PCL(PointCloudXY::Ptr out, std::vector<float> ranges, float range_max, float range_min, float angle_min, float angle_max, float angle_increment, int number_laser_rays, const Point& flappyPos){
+void convertLaserScan2PCL(PointCloudXY::Ptr mypcl, PointCloudXY::Ptr currentpcl, std::vector<float> ranges, float range_max, float range_min, float angle_min, float angle_max, float angle_increment, int number_laser_rays, const Point& flappyPos){
   for(int i = 0; i < ranges.size(); i++){
     if(isValidPoint(ranges.at(i),range_max, range_min)){
       float current_angle = angle_min+i*angle_increment;
       float x = ranges.at(i)*cos(current_angle)+flappyPos.x;
       float y = ranges.at(i)*sin(current_angle)+flappyPos.y;
-      out->push_back(pcl::PointXYZ(x,y,0));
+      mypcl->push_back(pcl::PointXYZ(x,y,0));
+      currentpcl->push_back(pcl::PointXYZ(x,y,0));
     }
   }
 }
@@ -86,12 +99,12 @@ bool isValidPoint(float range, float range_max, float range_min){
   return range < range_max && range > range_min;
 }
 
-void filterPCL(PointCloudXY::Ptr mypcl, float vx, float vy, float flappyPosX){
+void filterPCL(PointCloudXY::Ptr mypcl, PointCloudXY::Ptr currentpcl, float vx, float vy, float flappyPosX){
  // for(PointCloudXY::iterator it = mypcl->begin(); it!=mypcl->end(); it++){
   // }
   
 
-  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered (new pcl::PointCloud<pcl::PointXYZ>);
+  //pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered (new pcl::PointCloud<pcl::PointXYZ>);
 
 
 
@@ -106,7 +119,7 @@ void filterPCL(PointCloudXY::Ptr mypcl, float vx, float vy, float flappyPosX){
   extract.setInputCloud(mypcl);
   extract.setIndices(inliers);
   extract.setNegative(true);
-  extract.filter(*mypcl);
+  extract.filter(*currentpcl);
 
     //   std::sort(mypcl->points.begin(),mypcl->points.end(), [](pcl::PointXYZ a, pcl::PointXYZ b) {
     //     return a->x > b->x;   

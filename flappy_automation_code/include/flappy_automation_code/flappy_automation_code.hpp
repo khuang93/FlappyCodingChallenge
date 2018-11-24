@@ -6,6 +6,13 @@
 #include "geometry_msgs/Vector3.h"
 
 #include <pcl_conversions/pcl_conversions.h>
+#include <pcl/io/ply_io.h>
+
+#include "tf/transform_listener.h"
+#include "sensor_msgs/PointCloud.h"
+#include "tf/message_filter.h"
+#include "message_filters/subscriber.h"
+#include "laser_geometry/laser_geometry.h"
 
 struct Point{
   float x; //in body coordinate, distance from flappy
@@ -22,14 +29,16 @@ typedef pcl::PointCloud<pcl::PointXYZ> PointCloudXY;
 class SubscribeAndPublish
 {
 private:
-     pcl::PointCloud<pcl::PointXYZ>::Ptr mypcl;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr mypcl;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr currentpcl;
     Point flappyPos;
-    //std::vector<Point> pcl;
+    Point flappyPos_prev;
+    std::vector<Point> current_pcl;
     const int FPS = 30;
 
 public:
     //Constructor
-    SubscribeAndPublish():flappyPos(Point(0.0f,0.0f)),mypcl(new pcl::PointCloud<pcl::PointXYZ>)
+    SubscribeAndPublish():flappyPos(Point(0.0f,0.0f)),flappyPos_prev(Point(0.0f,0.0f)),mypcl(new pcl::PointCloud<pcl::PointXYZ>),currentpcl(new pcl::PointCloud<pcl::PointXYZ>)
     {
         //Initialization of nodehandle
         nh_ = new ros::NodeHandle();
@@ -44,6 +53,9 @@ public:
         //subscribers
         sub_flappy_pos = nh_->subscribe<geometry_msgs::Vector3>("/flappy_pos",1, &SubscribeAndPublish::posCallback, this);
         sub_pcl = nh_->subscribe<sensor_msgs::PointCloud2>("/PCL",1, &SubscribeAndPublish::pclCallback, this);
+
+
+
     }
 
 /*  void callback(const SUBSCRIBED_MESSAGE_TYPE& input)
@@ -59,6 +71,10 @@ public:
     void posCallback(const geometry_msgs::Vector3::ConstPtr& msg);
     void pclCallback(const sensor_msgs::PointCloud2::ConstPtr& msg);
 
+
+    // laser_geometry::LaserProjection projector_;
+    // tf::TransformListener listener_;
+    // sensor_msgs::PointCloud cloud;
   
 private:
     //Ros nodehandle
@@ -88,9 +104,10 @@ private:
 void initNode();
 
 
-void convertLaserScan2PCL(PointCloudXY::Ptr out, std::vector<float> ranges, float range_max, float range_min, float angle_min, float angle_max, float angle_increment, int number_laser_rays,  const Point&flappyPos);
+void convertLaserScan2PCL(PointCloudXY::Ptr mypcl, PointCloudXY::Ptr currentpcl, std::vector<float> ranges, float range_max, float range_min, float angle_min, float angle_max, float angle_increment, int number_laser_rays,  const Point&flappyPos);
 bool isValidPoint(float range, float range_max, float range_min);
-void filterPCL(PointCloudXY::Ptr mypcl, float vx, float vy, float flappyPosX);
+void filterPCL(PointCloudXY::Ptr mypcl, PointCloudXY::Ptr currentpcl, float vx, float vy, float flappyPosX);
 void updateFlappyPos(Point& flappyPos, float vx, float vy);
+void savePCL2PLY(PointCloudXY::Ptr mypcl);
 
 #endif
