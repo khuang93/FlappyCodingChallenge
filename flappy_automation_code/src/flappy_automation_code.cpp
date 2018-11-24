@@ -75,8 +75,8 @@ void convertLaserScan2PCL(PointCloudXY::Ptr out, std::vector<float> ranges, floa
   for(int i = 0; i < ranges.size(); i++){
     if(isValidPoint(ranges.at(i),range_max, range_min)){
       float current_angle = angle_min+i*angle_increment;
-      float x = ranges.at(i)*cos(current_angle)+flappyPos.x;
-      float y = ranges.at(i)*sin(current_angle)+flappyPos.y;
+      float x = ranges.at(i)*cos(current_angle)/* +flappyPos.x */;
+      float y = ranges.at(i)*sin(current_angle)/* +flappyPos.y */;
       out->push_back(pcl::PointXYZ(x,y,0));
     }
   }
@@ -99,7 +99,7 @@ void filterPCL(PointCloudXY::Ptr mypcl, float vx, float vy, float flappyPosX){
   pcl::ExtractIndices<pcl::PointXYZ> extract;
   for (int i = 0; i < (*mypcl).size(); i++)
   {
-    if ((mypcl->points[i].x- flappyPosX) < 0.0f){
+    if ((mypcl->points[i].x /* - flappyPosX */) < 0.0f){
       inliers->indices.push_back(i);
     }
   }
@@ -139,8 +139,11 @@ void updateFlappyPos(Point& flappyPos, float vx, float vy){
 int main(int argc, char **argv)
 {
   ros::init(argc,argv,"flappy_automation_code");
+  ros::NodeHandle n;
   initNode();
-  SubscribeAndPublish SAPObject;
+  
+  SubscribeAndPublish SAPObject(&n);
+  // LaserScanToPointCloud lstp(n);
   
 
 
