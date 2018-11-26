@@ -66,6 +66,8 @@ void SubscribeAndPublish::laserScanCallback(const sensor_msgs::LaserScan::ConstP
   //print laser angle and range
  
   //ROS_INFO("Laser range: %f, angle: %f", msg->ranges[0], msg->angle_min);
+  ROS_INFO("Time Laser x: %f", msg->header.stamp.nsec);
+  ROS_INFO("Time Laser x: %f", msg->header.stamp.sec);
 
   int number_laser_rays = (msg->angle_max-msg->angle_min)/msg->angle_increment + 1;
   ROS_INFO("Laser number_laser_rays: %i", number_laser_rays);
@@ -74,8 +76,8 @@ void SubscribeAndPublish::laserScanCallback(const sensor_msgs::LaserScan::ConstP
   
   convertLaserScan2PCL(mypcl, currentpcl, current_pcl, msg->ranges, msg->range_max, msg->range_min, (float)msg->angle_min, (float)msg->angle_max, (float)msg->angle_increment, number_laser_rays, flappyPos_prev);
 
-  this->midY = getMiddleOfGap(current_pcl);
-  ROS_INFO("MidY  %f", midY);
+  // this->midY = getMiddleOfGap(current_pcl);
+  // ROS_INFO("MidY  %f", midY);
    for(int i = 0; i < number_laser_rays; i++){
     ROS_INFO("Laser range: %f, angle: %f", msg->ranges[i], msg->angle_min+msg->angle_increment*i);
 
@@ -95,13 +97,13 @@ void SubscribeAndPublish::pclCallback(const sensor_msgs::PointCloud2::ConstPtr& 
 
 }
 void convertLaserScan2PCL(PointCloudXY::Ptr mypcl, PointCloudXY::Ptr currentpcl,std::vector<Point>& current_pcl, std::vector<float> ranges, float range_max, float range_min, float angle_min, float angle_max, float angle_increment, int number_laser_rays, const Point& flappyPos){
-  currentpcl->clear();
+  // currentpcl->clear();
   current_pcl.clear();
   for(int i = 0; i < ranges.size(); i++){
     if(isValidPoint(ranges.at(i),range_max, range_min)){
       float current_angle = angle_min+i*angle_increment;
-      float x = ranges.at(i)*cos(current_angle)/* +flappyPos.x */;
-      float y = ranges.at(i)*sin(current_angle)/* +flappyPos.y */;
+      float x = ranges.at(i)*cos(current_angle)+flappyPos.x;
+      float y = ranges.at(i)*sin(current_angle)+flappyPos.y;
       mypcl->push_back(pcl::PointXYZ(x,y,0));
       currentpcl->push_back(pcl::PointXYZ(x,y,0));
       current_pcl.push_back(Point(x,y));
@@ -129,7 +131,7 @@ void filterPCL(PointCloudXY::Ptr mypcl, PointCloudXY::Ptr currentpcl, float vx, 
   pcl::ExtractIndices<pcl::PointXYZ> extract;
   for (int i = 0; i < (*mypcl).size(); i++)
   {
-    if ((mypcl->points[i].x/* - flappyPosX */) < 0.0f){
+    if ((mypcl->points[i].x- flappyPosX) < 0.0f){
       inliers->indices.push_back(i);
     }
   }
