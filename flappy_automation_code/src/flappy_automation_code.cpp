@@ -32,17 +32,6 @@ void SubscribeAndPublish::velCallback(const geometry_msgs::Vector3::ConstPtr& ms
 
   ROS_INFO("flappyPos x: %f, y: %f", flappyPos.x,  flappyPos.y);
 
-/*   for(int i = 0; i < mypcl->size(); i++){
-      //if((mypcl->at(i).x-flappyPos.x) < 0) 
-      ROS_INFO("PCL x: %f, y: %f", mypcl->at(i).x-flappyPos.x,  mypcl->at(i).y);
-      
-  } */
-
-/*   for(int i = 0; i < currentpcl->size(); i++){
-      //if((mypcl->at(i).x-flappyPos.x) < 0)
-      ROS_INFO("CurrentPCL x: %f, y: %f", currentpcl->at(i).x-flappyPos.x,  currentpcl->at(i).y);
-      
-  } */
 
   pcl::io::savePLYFileASCII("pointCloud.ply", *mypcl);
    
@@ -66,8 +55,8 @@ void SubscribeAndPublish::laserScanCallback(const sensor_msgs::LaserScan::ConstP
   //print laser angle and range
  
   //ROS_INFO("Laser range: %f, angle: %f", msg->ranges[0], msg->angle_min);
-  ROS_INFO("Time Laser x: %i", msg->header.stamp.nsec);
-  ROS_INFO("Time Laser x: %i", msg->header.stamp.sec);
+  // ROS_INFO("Time Laser x: %i", msg->header.stamp.nsec);
+  // ROS_INFO("Time Laser x: %i", msg->header.stamp.sec);
 
   int number_laser_rays = (msg->angle_max-msg->angle_min)/msg->angle_increment + 1;
   ROS_INFO("Laser number_laser_rays: %i", number_laser_rays);
@@ -122,7 +111,7 @@ void filterPCL(PointCloudXY::Ptr mypcl, PointCloudXY::Ptr currentpcl, float vx, 
   pcl::ExtractIndices<pcl::PointXYZ> extract;
   for (int i = 0; i < (*mypcl).size(); i++)
   {
-    if ((mypcl->points[i].x- flappyPosX) < 0.0f){
+    if ((mypcl->points[i].x- flappyPosX) < 0.0f || (mypcl->points[i].x- flappyPosX) > 2.0f ){
       inliers->indices.push_back(i);
     }
   }
@@ -164,7 +153,6 @@ int main(int argc, char **argv)
   initNode();
   SubscribeAndPublish SAPObject;
   
-
 
   // Ros spin to prevent program from exiting
   ros::spin();

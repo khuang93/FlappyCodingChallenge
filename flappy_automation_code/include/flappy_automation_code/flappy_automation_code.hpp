@@ -29,11 +29,11 @@ typedef pcl::PointCloud<pcl::PointXYZ> PointCloudXY;
 class SubscribeAndPublish
 {
 private:
-    pcl::PointCloud<pcl::PointXYZ>::Ptr mypcl;
-    pcl::PointCloud<pcl::PointXYZ>::Ptr currentpcl;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr mypcl; //the whole map as point cloud
+    pcl::PointCloud<pcl::PointXYZ>::Ptr currentpcl; //only points in front of the flappy
     Point flappyPos;
     Point flappyPos_prev;
-    const int FPS = 30;
+    const int FPS = 30; //frame per sec, fixed in this game
     double midY=0.0;
 
 public:
@@ -58,23 +58,12 @@ public:
 
     }
 
-/*  void callback(const SUBSCRIBED_MESSAGE_TYPE& input)
-    {
-    PUBLISHED_MESSAGE_TYPE output;
-        .... do something with the input and generate the output...
-        pub_.publish(output);  
-
-    } */
-
     void velCallback(const geometry_msgs::Vector3::ConstPtr& msg);
     void laserScanCallback(const sensor_msgs::LaserScan::ConstPtr& msg);
+
     void posCallback(const geometry_msgs::Vector3::ConstPtr& msg);
     void pclCallback(const sensor_msgs::PointCloud2::ConstPtr& msg);
 
-
-    // laser_geometry::LaserProjection projector_;
-    // tf::TransformListener listener_;
-    // sensor_msgs::PointCloud cloud;
   
 private:
     //Ros nodehandle
