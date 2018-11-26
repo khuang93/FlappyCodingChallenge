@@ -36,8 +36,10 @@ void SubscribeAndPublish::velCallback(const geometry_msgs::Vector3::ConstPtr& ms
   pcl::io::savePLYFileASCII("pointCloud.ply", *mypcl);
    
 
-  acc_cmd.x = 0.1;
-  acc_cmd.y = midY;
+  acc_cmd.x = 0;
+  acc_cmd.y = 0.3*(midY-flappyPos.y);
+
+    ROS_INFO("Accel x: %f, y: %f", acc_cmd.x,  acc_cmd.y);
 /*   if(midY<-1){
     acc_cmd.y=0.1;
   }else if(midY>-1&&midY>1){
@@ -60,20 +62,14 @@ void SubscribeAndPublish::laserScanCallback(const sensor_msgs::LaserScan::ConstP
 
   int number_laser_rays = (msg->angle_max-msg->angle_min)/msg->angle_increment + 1;
   ROS_INFO("Laser number_laser_rays: %i", number_laser_rays);
- 
-  // projector_.transformLaserScanToPointCloud("base_link",*msg,cloud,listener_);
   
   convertLaserScan2PCL(mypcl, currentpcl, msg->ranges, msg->range_max, msg->range_min, (float)msg->angle_min, (float)msg->angle_max, (float)msg->angle_increment, number_laser_rays, flappyPos_prev);
 
-  // this->midY = getMiddleOfGap(current_pcl);
-  // ROS_INFO("MidY  %f", midY);
-   for(int i = 0; i < number_laser_rays; i++){
-    ROS_INFO("Laser range: %f, angle: %f", msg->ranges[i], msg->angle_min+msg->angle_increment*i);
-
-  }
-
-
-
+  this->midY = getMiddleOfGap(currentpcl);
+  ROS_INFO("MidY  %f", midY);
+  //  for(int i = 0; i < number_laser_rays; i++){
+  //   ROS_INFO("Laser range: %f, angle: %f", msg->ranges[i], msg->angle_min+msg->angle_increment*i);
+  // }
 }
 
 
@@ -130,21 +126,35 @@ void updateFlappyPos(Point& flappyPos, float vx, float vy){
   flappyPos.y+=dY;
 }
 
-double getMiddleOfGap(std::vector<Point>& current_pcl){
+double getMiddleOfGap(pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl){
   double midY = 0.0;
   double maxGap = 0.0;
-  for(int i = 0; i < current_pcl.size()-1;i++){
-    double gap = current_pcl.at(i+1).y-current_pcl.at(i).y;
+  for(int i = 0; i < currentpcl->size()-1;i++){
+    double gap = currentpcl->at(i+1).y-currentpcl->at(i).y;
     if(gap>maxGap){
       maxGap=gap;
-      midY= 0.5*(current_pcl.at(i+1).y+current_pcl.at(i).y);
+      midY= 0.5*(currentpcl->at(i+1).y+currentpcl->at(i).y);
     }
   } 
-  if(maxGap < 0.3){
+  if(maxGap < 0.1){
     midY = 0.0;
   }
+  return midY;
 }
 
+double getMinObstacleDist(pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl, Point& flappyPos){
+  double minDist = 0.0;
+  double maxGap = 0.0;
+  for(int i = 0; i < currentpcl->size()-1;i++){
+    double distY = abs(currentpcl->at(i).y-flappyPos.y);
+    double distX = abs(currentpcl->at(i).x-flappyPos.x);
+    double dist = sqrt(distX*distX+distY*distY);
+    if(distX>minDist && dist < 0.3){
+      minDist=distX;
+    }
+  } 
+  return minDist;
+}
 
 
 int main(int argc, char **argv)

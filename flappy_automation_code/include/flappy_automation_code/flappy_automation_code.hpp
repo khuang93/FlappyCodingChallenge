@@ -101,7 +101,8 @@ void savePCL2PLY(PointCloudXY::Ptr mypcl);
 
 // bool comparePts (Point i,Point j) { return (i.y<j.y); }
 bool comparePts (pcl::PointXYZ i, pcl::PointXYZ j) { return (i.y<j.y); }
-double getMiddleOfGap(std::vector<Point>& current_pcl);
+double getMiddleOfGap(PointCloudXY::Ptr& currentpcl);
+double getMinObstacleDist(pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl, Point& flappyPos);
 
 
 #endif
