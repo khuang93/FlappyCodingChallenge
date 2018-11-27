@@ -34,7 +34,11 @@ private:
     Point flappyPos;
     Point flappyPos_prev;
     const int FPS = 30; //frame per sec, fixed in this game
+    Point midPoint = Point(0.0,0.0);
     double midY=0.0;
+    double midX=0.0;
+    Point closestPointTop  = Point(100.0,100.0);
+    Point closestPointBot  = Point(100.0,100.0);
 
 public:
     //Constructor
@@ -64,6 +68,7 @@ public:
     void posCallback(const geometry_msgs::Vector3::ConstPtr& msg);
     void pclCallback(const sensor_msgs::PointCloud2::ConstPtr& msg);
 
+    void getClosestPoints(pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl, Point& flappyPos);
   
 private:
     //Ros nodehandle
@@ -101,8 +106,11 @@ void savePCL2PLY(PointCloudXY::Ptr mypcl);
 
 // bool comparePts (Point i,Point j) { return (i.y<j.y); }
 bool comparePts (pcl::PointXYZ i, pcl::PointXYZ j) { return (i.y<j.y); }
-double getMiddleOfGap(PointCloudXY::Ptr& currentpcl);
-double getMinObstacleDist(pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl, Point& flappyPos);
+Point getMiddleOfGap(PointCloudXY::Ptr& currentpcl);
 
+Point getClosestPointBot(pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl, Point& flappyPos);
+double getMinXObstacleDist(pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl, Point& flappyPos);
+double getMinYObstacleDist(pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl, Point& flappyPos);
+bool possibleCollision(pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl, Point& flappyPos, Point& vel);
 
 #endif
