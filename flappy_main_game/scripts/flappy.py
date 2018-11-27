@@ -317,7 +317,7 @@ def mainGame(movementInfo):
                 if betweenPipes == 0:
                     score += 1
                     betweenPipes = 1
-                    SOUNDS['point'].play()
+                    # SOUNDS['point'].play()
         if pipeCounter == 0:
             betweenPipes = 0
         # playerIndex basex change
@@ -401,10 +401,10 @@ def showGameOverScreen(crashInfo):
     upperPipes, lowerPipes = crashInfo['upperPipes'], crashInfo['lowerPipes']
 
     # play hit and die sounds
-    if not crashInfo['timeRanOut']:
-        SOUNDS['hit'].play()
-    if not crashInfo['groundCrash']:
-        SOUNDS['die'].play()
+    # if not crashInfo['timeRanOut']:
+        # SOUNDS['hit'].play()
+    # if not crashInfo['groundCrash']:
+        # SOUNDS['die'].play()
 
     while True:
         for event in pygame.event.get():

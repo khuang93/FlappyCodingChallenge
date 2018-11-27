@@ -6,7 +6,7 @@
 #include <math.h>
 #include <pcl/cloud_iterator.h>
 #include <pcl/filters/passthrough.h>
-#include <pcl-1.7/pcl/filters/extract_indices.h>
+#include <pcl/filters/extract_indices.h>
 #include <algorithm>
 #include <functional>
 #include <array>
@@ -58,10 +58,10 @@ void SubscribeAndPublish::velCallback(const geometry_msgs::Vector3::ConstPtr& ms
   
   float vx_desired = 0.3; //std::max(0.2,0.4-std::abs(vy_desired)); //0.5*std::sqrt(minDistX*minDistX+minDistY*minDistY);
   // if(std::abs(vy_desired)>0.2) vx_desired=0.1;
-  if(midPoint_old.y-midPoint.y > 1){
-    vy_desired *= 0.5;
-    vx_desired *=2;
-  }
+  // if(midPoint_old.y-midPoint.y > 1){
+  //   vy_desired *= 0.5;
+  //   vx_desired *=2;
+  // }
   
   Point vel = Point(vx_desired,vy_desired);
     // if(minDistX > 0 && minDistX < 1 && std::abs(minDistY) < 0.2){
@@ -151,7 +151,7 @@ void filterPCL(PointCloudXY::Ptr mypcl, PointCloudXY::Ptr currentpcl, float vx, 
   if(mypcl->size()==0) return;
   for (int i = 0; i < (*mypcl).size(); i++)
   {
-    if ((mypcl->points[i].x- flappyPosX) < -0.3f || (mypcl->points[i].x- flappyPosX) > 1.2f ){
+    if ((mypcl->points[i].x- flappyPosX) < -0.3f || (mypcl->points[i].x- flappyPosX) > 1.5f ){
       inliers->indices.push_back(i);
     }
   }
@@ -183,7 +183,7 @@ void SubscribeAndPublish::getMiddleOfGap(pcl::PointCloud<pcl::PointXYZ>::Ptr& cu
     if(gap>maxGap){
       maxGap=gap;
       float midY_tmp = 0.5*(currentpcl->at(i+1).y+currentpcl->at(i).y);
-      if(midY_tmp<2 && midY_tmp>-1.2){
+      if(midY_tmp<1.8 && midY_tmp>-1.2){
         midY = midY_tmp;
         midX = 0.5*(currentpcl->at(i+1).x+currentpcl->at(i).x);
       }

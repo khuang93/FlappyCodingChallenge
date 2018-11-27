@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(flappy_automation_code)
 
 set (CMAKE_CXX_STANDARD 11)
+find_package(PCL REQUIRED)
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
@@ -18,6 +19,7 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
+   ${PCL_INCLUDE_DIRS}
 )
 
 add_executable(${PROJECT_NAME}_node src/flappy_automation_code.cpp)
