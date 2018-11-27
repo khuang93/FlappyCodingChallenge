@@ -29,13 +29,17 @@ typedef pcl::PointCloud<pcl::PointXYZ> PointCloudXY;
 class SubscribeAndPublish
 {
 private:
+    int state_bird = 0; //0 in front of pipe, 1 in pipe
     pcl::PointCloud<pcl::PointXYZ>::Ptr mypcl; //the whole map as point cloud
     pcl::PointCloud<pcl::PointXYZ>::Ptr currentpcl; //only points in front of the flappy
     Point flappyPos;
     Point flappyPos_prev;
+    Point vel_prev= Point(0.0,0.0);
     const int FPS = 30; //frame per sec, fixed in this game
     Point midPoint = Point(0.0,0.0);
+     Point midPoint_old = Point(0.0,0.0);
     double midY=0.0;
+    double midY_old=0.0;
     double midX=0.0;
     Point closestPointTop  = Point(100.0,100.0);
     Point closestPointBot  = Point(100.0,100.0);
@@ -69,6 +73,8 @@ public:
     void pclCallback(const sensor_msgs::PointCloud2::ConstPtr& msg);
 
     void getClosestPoints(pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl, Point& flappyPos);
+    void getMiddleOfGap(PointCloudXY::Ptr& currentpcl);
+    void updateFlappyPos(Point& flappyPos, float vx, float vy);
   
 private:
     //Ros nodehandle
@@ -101,16 +107,17 @@ void initNode();
 void convertLaserScan2PCL(PointCloudXY::Ptr mypcl, PointCloudXY::Ptr currentpcl,std::vector<float> ranges, float range_max, float range_min, float angle_min, float angle_max, float angle_increment, int number_laser_rays,  const Point&flappyPos);
 bool isValidPoint(float range, float range_max, float range_min);
 void filterPCL(PointCloudXY::Ptr mypcl, PointCloudXY::Ptr currentpcl, float vx, float vy, float flappyPosX);
-void updateFlappyPos(Point& flappyPos, float vx, float vy);
+
 void savePCL2PLY(PointCloudXY::Ptr mypcl);
 
 // bool comparePts (Point i,Point j) { return (i.y<j.y); }
 bool comparePts (pcl::PointXYZ i, pcl::PointXYZ j) { return (i.y<j.y); }
-Point getMiddleOfGap(PointCloudXY::Ptr& currentpcl);
+
 
 Point getClosestPointBot(pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl, Point& flappyPos);
 double getMinXObstacleDist(pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl, Point& flappyPos);
 double getMinYObstacleDist(pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl, Point& flappyPos);
 bool possibleCollision(pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl, Point& flappyPos, Point& vel);
+float calculatePointDistance(Point p1, Point p2);
 
 #endif

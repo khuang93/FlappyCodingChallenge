@@ -39,11 +39,31 @@ void SubscribeAndPublish::velCallback(const geometry_msgs::Vector3::ConstPtr& ms
   pcl::io::savePLYFileASCII("pointCloud.ply", *mypcl);
   // midY = 0.5;
 
-  float vy_desired = (midY-flappyPos.y);
-  float vx_desired = 0.3; //0.5*std::sqrt(minDistX*minDistX+minDistY*minDistY);
-  Point vel = Point(vx_desired,vy_desired);
   
-  if(possibleCollision(currentpcl,flappyPos, vel)){
+  
+  float distTop = calculatePointDistance(flappyPos,closestPointTop);
+  float distBot = calculatePointDistance(flappyPos,closestPointBot);
+
+
+  // if(possibleCollision(currentpcl,flappyPos, vel)){
+    if(distTop<0.25 && distBot <0.25){
+      midY = closestPointTop.y+closestPointBot.y;
+    }else if(distTop<0.25){
+      midY-=0.1;
+    }else if(distBot<0.25){
+      midY+=0.1;
+    }
+
+  float vy_desired = (midY-flappyPos.y);
+  
+  float vx_desired = 0.3; //std::max(0.2,0.4-std::abs(vy_desired)); //0.5*std::sqrt(minDistX*minDistX+minDistY*minDistY);
+  // if(std::abs(vy_desired)>0.2) vx_desired=0.1;
+  if(midPoint_old.y-midPoint.y > 1){
+    vy_desired *= 0.5;
+    vx_desired *=2;
+  }
+  
+  Point vel = Point(vx_desired,vy_desired);
     // if(minDistX > 0 && minDistX < 1 && std::abs(minDistY) < 0.2){
     //   vx_desired =  std::max(0.3*std::abs(minDistX),0.1);
     //   if(minDistY>0) {
@@ -52,14 +72,14 @@ void SubscribeAndPublish::velCallback(const geometry_msgs::Vector3::ConstPtr& ms
     //     vy_desired = 4*(-0.2 + minDistY);
     //   }
     // }
-  }
+  // }
   
   
 
 ROS_INFO("flappyVelDesired vx: %f, vy: %f", vx_desired, vy_desired);
-  float kp = 1.1;
-  acc_cmd.x = kp*(vx_desired-msg->x);
-  acc_cmd.y =  kp*(vy_desired-msg->y);
+  float kp = 1;
+  acc_cmd.x = 1.1*(vx_desired-msg->x);
+  acc_cmd.y =  0.9*(vy_desired-msg->y);
   // acc_cmd.y *= std::max(0.05, msg->y);
   
   // acc_cmd.y  = 0;
@@ -82,7 +102,7 @@ void SubscribeAndPublish::laserScanCallback(const sensor_msgs::LaserScan::ConstP
   
   convertLaserScan2PCL(mypcl, currentpcl, msg->ranges, msg->range_max, msg->range_min, (float)msg->angle_min, (float)msg->angle_max, (float)msg->angle_increment, number_laser_rays, flappyPos_prev);
 
-  this-> midPoint = getMiddleOfGap(currentpcl);
+  getMiddleOfGap(currentpcl);
   this->midX=midPoint.x;
   this->midY=midPoint.y;
 
@@ -142,34 +162,37 @@ void filterPCL(PointCloudXY::Ptr mypcl, PointCloudXY::Ptr currentpcl, float vx, 
 
 }
 
-void updateFlappyPos(Point& flappyPos, float vx, float vy){
+void SubscribeAndPublish::updateFlappyPos(Point& flappyPos, float vx, float vy){
   float dX = vx/30;
   float dY = vy/30;
 
   flappyPos.x+=dX;
   flappyPos.y+=dY;
+  vel_prev.x=vx;
+  vel_prev.y=vy;
 }
 
-Point getMiddleOfGap(pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl){
-  double midY = 0.0;
-  double midX = 0.0;
-  double maxGap = 0.0;
-  if(currentpcl->size()==0) return Point(0.0,0.0);
+void SubscribeAndPublish::getMiddleOfGap(pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl){
+  midPoint_old=midPoint;
+  float& midY = midPoint.y;
+  float& midX = midPoint.x;
+  float maxGap = 0.0;
+  if(currentpcl->size()==0) return;
   for(int i = 0; i < currentpcl->size()-1;i++){
-    double gap = currentpcl->at(i+1).y-currentpcl->at(i).y;
+    float gap = currentpcl->at(i+1).y-currentpcl->at(i).y;
     if(gap>maxGap){
       maxGap=gap;
-      double midY_tmp = 0.5*(currentpcl->at(i+1).y+currentpcl->at(i).y);
+      float midY_tmp = 0.5*(currentpcl->at(i+1).y+currentpcl->at(i).y);
       if(midY_tmp<2 && midY_tmp>-1.2){
         midY = midY_tmp;
-        double midX = 0.5*(currentpcl->at(i+1).x+currentpcl->at(i).x);
+        midX = 0.5*(currentpcl->at(i+1).x+currentpcl->at(i).x);
       }
     }
   } 
   if(maxGap < 0.1){
     midY = 0.0;
   }
-  return Point(midX,midY);
+  
 }
 
 void SubscribeAndPublish::getClosestPoints(pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl, Point& flappyPos){
@@ -184,14 +207,14 @@ void SubscribeAndPublish::getClosestPoints(pcl::PointCloud<pcl::PointXYZ>::Ptr& 
     if(distY<0){
       if(dist<minDistTop && dist < 1){
             minDistTop=dist;
-            this->closestPointTop.x = distX;
-            this->closestPointTop.y = distY;
+            this->closestPointTop.x = currentpcl->at(i).x;
+            this->closestPointTop.y = currentpcl->at(i).y;
       }
     }else{
        if(dist<minDistBot && dist < 1){
             minDistBot=dist;
-            this->closestPointBot.x = distX;
-            this->closestPointBot.y = distY;
+            this->closestPointBot.x = currentpcl->at(i).x;
+            this->closestPointBot.y = currentpcl->at(i).y;
       }
     }
   } 
@@ -236,6 +259,12 @@ bool possibleCollision(pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl, Point& f
   
 
   return false;
+}
+
+float calculatePointDistance(Point p1, Point p2){
+  float distX = p1.x - p2.x;
+  float distY = p1.y - p2.y;
+  return std::sqrt(distX*distX+distY*distY);
 }
 
 
