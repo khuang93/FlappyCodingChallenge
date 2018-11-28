@@ -11,7 +11,6 @@
 #include <functional>
 #include <array>
 #include <fstream>
-#include <math.h>
 
 
 
@@ -95,8 +94,6 @@ void SubscribeAndPublish::laserScanCallback(const sensor_msgs::LaserScan::ConstP
   //print laser angle and range
  
   //ROS_INFO("Laser range: %f, angle: %f", msg->ranges[0], msg->angle_min);
-  // ROS_INFO("Time Laser x: %i", msg->header.stamp.nsec);
-  // ROS_INFO("Time Laser x: %i", msg->header.stamp.sec);
 
   int number_laser_rays = (msg->angle_max-msg->angle_min)/msg->angle_increment + 1;
   
@@ -115,13 +112,13 @@ void SubscribeAndPublish::laserScanCallback(const sensor_msgs::LaserScan::ConstP
 
 
 
-// void SubscribeAndPublish::posCallback(const geometry_msgs::Vector3::ConstPtr& msg){
+/* void SubscribeAndPublish::posCallback(const geometry_msgs::Vector3::ConstPtr& msg){
 
-// }
+}
 
-// void SubscribeAndPublish::pclCallback(const sensor_msgs::PointCloud2::ConstPtr& msg){
+void SubscribeAndPublish::pclCallback(const sensor_msgs::PointCloud2::ConstPtr& msg){
 
-// }
+} */
 void convertLaserScan2PCL(PointCloudXY::Ptr mypcl, PointCloudXY::Ptr currentpcl, std::vector<float> ranges, float range_max, float range_min, float angle_min, float angle_max, float angle_increment, int number_laser_rays, const Point& flappyPos){
 
   for(int i = 0; i < ranges.size(); i++){
@@ -129,10 +126,10 @@ void convertLaserScan2PCL(PointCloudXY::Ptr mypcl, PointCloudXY::Ptr currentpcl,
       float current_angle = angle_min+i*angle_increment;
       float x = ranges.at(i)*cos(current_angle);
       float y = ranges.at(i)*sin(current_angle);
-      // if(x<1 && y<1){
+      if(x<1 && std::abs(y)<2){
         mypcl->push_back(pcl::PointXYZ(x+flappyPos.x,y+flappyPos.y,0));
         // currentpcl->push_back(pcl::PointXYZ(x,y,0));
-      // }
+      }
     }
   }
   std::sort(currentpcl->begin(),currentpcl->end(), comparePts );
@@ -151,7 +148,7 @@ void filterPCL(PointCloudXY::Ptr mypcl, PointCloudXY::Ptr currentpcl, float vx, 
   if(mypcl->size()==0) return;
   for (int i = 0; i < (*mypcl).size(); i++)
   {
-    if ((mypcl->points[i].x- flappyPosX) < -0.3f || (mypcl->points[i].x- flappyPosX) > 1.5f ){
+    if ((mypcl->points[i].x- flappyPosX) < -0.3f || (mypcl->points[i].x- flappyPosX) > 1.2f ){
       inliers->indices.push_back(i);
     }
   }

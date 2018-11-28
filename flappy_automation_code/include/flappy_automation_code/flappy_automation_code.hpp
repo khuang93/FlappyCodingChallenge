@@ -62,14 +62,14 @@ public:
         sub_vel = nh_->subscribe<geometry_msgs::Vector3>("/flappy_vel", 1, &SubscribeAndPublish::velCallback, this);
         sub_laser_scan = nh_->subscribe<sensor_msgs::LaserScan>("/flappy_laser_scan", 1, &SubscribeAndPublish::laserScanCallback, this);
 
-        //additional state publisher
-        // pub_flappy_pos = nh_->advertise<geometry_msgs::Vector3>("/flappy_pos",1);
-        // pub_pcl = nh_->advertise<sensor_msgs::PointCloud2>("/PCL",1);
-        //subscribers
-        // sub_flappy_pos = nh_->subscribe<geometry_msgs::Vector3>("/flappy_pos",1, &SubscribeAndPublish::posCallback, this);
-        // sub_pcl = nh_->subscribe<sensor_msgs::PointCloud2>("/PCL",1, &SubscribeAndPublish::pclCallback, this);
+        /* //additional state publisher
+        pub_flappy_pos = nh_->advertise<geometry_msgs::Vector3>("/flappy_pos",1);
+        pub_pcl = nh_->advertise<sensor_msgs::PointCloud2>("/PCL",1);
+        // subscribers
+        sub_flappy_pos = nh_->subscribe<geometry_msgs::Vector3>("/flappy_pos",1, &SubscribeAndPublish::posCallback, this);
+        sub_pcl = nh_->subscribe<sensor_msgs::PointCloud2>("/PCL",1, &SubscribeAndPublish::pclCallback, this);
 
-
+         */
 
     }
 
