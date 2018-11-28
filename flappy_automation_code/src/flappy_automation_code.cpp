@@ -27,7 +27,7 @@ void SubscribeAndPublish::velCallback(const geometry_msgs::Vector3::ConstPtr& ms
   // Example of publishing acceleration command on velocity velCallback
   geometry_msgs::Vector3 acc_cmd;
 
-
+  framesElapsed++;
   flappyPos_prev=flappyPos;
   updateFlappyPos(flappyPos, msg->x, msg->y);
   filterPCL(mypcl, currentpcl, msg->x, msg->y,flappyPos.x);
@@ -37,7 +37,7 @@ void SubscribeAndPublish::velCallback(const geometry_msgs::Vector3::ConstPtr& ms
     
 
   pcl::io::savePLYFileASCII("pointCloud.ply", *mypcl);
-  // midY = 0.5;
+
 
   
   
@@ -47,7 +47,7 @@ void SubscribeAndPublish::velCallback(const geometry_msgs::Vector3::ConstPtr& ms
 
   // if(possibleCollision(currentpcl,flappyPos, vel)){
     if(distTop<0.25 && distBot <0.25){
-      midY = closestPointTop.y+closestPointBot.y;
+      midY = (closestPointTop.y+closestPointBot.y)/2;
     }else if(distTop<0.25){
       midY-=0.1;
     }else if(distBot<0.25){
@@ -79,7 +79,7 @@ void SubscribeAndPublish::velCallback(const geometry_msgs::Vector3::ConstPtr& ms
 ROS_INFO("flappyVelDesired vx: %f, vy: %f", vx_desired, vy_desired);
   float kp = 1;
   acc_cmd.x = 1.1*(vx_desired-msg->x);
-  acc_cmd.y =  0.9*(vy_desired-msg->y);
+  acc_cmd.y =  1.2*(vy_desired-msg->y);
   // acc_cmd.y *= std::max(0.05, msg->y);
   
   // acc_cmd.y  = 0;
@@ -101,7 +101,7 @@ void SubscribeAndPublish::laserScanCallback(const sensor_msgs::LaserScan::ConstP
   int number_laser_rays = (msg->angle_max-msg->angle_min)/msg->angle_increment + 1;
   
   convertLaserScan2PCL(mypcl, currentpcl, msg->ranges, msg->range_max, msg->range_min, (float)msg->angle_min, (float)msg->angle_max, (float)msg->angle_increment, number_laser_rays, flappyPos_prev);
-
+  // if(framesElapsed%5==0)  
   getMiddleOfGap(currentpcl);
   this->midX=midPoint.x;
   this->midY=midPoint.y;
@@ -115,13 +115,13 @@ void SubscribeAndPublish::laserScanCallback(const sensor_msgs::LaserScan::ConstP
 
 
 
-void SubscribeAndPublish::posCallback(const geometry_msgs::Vector3::ConstPtr& msg){
+// void SubscribeAndPublish::posCallback(const geometry_msgs::Vector3::ConstPtr& msg){
 
-}
+// }
 
-void SubscribeAndPublish::pclCallback(const sensor_msgs::PointCloud2::ConstPtr& msg){
+// void SubscribeAndPublish::pclCallback(const sensor_msgs::PointCloud2::ConstPtr& msg){
 
-}
+// }
 void convertLaserScan2PCL(PointCloudXY::Ptr mypcl, PointCloudXY::Ptr currentpcl, std::vector<float> ranges, float range_max, float range_min, float angle_min, float angle_max, float angle_increment, int number_laser_rays, const Point& flappyPos){
 
   for(int i = 0; i < ranges.size(); i++){
@@ -183,10 +183,10 @@ void SubscribeAndPublish::getMiddleOfGap(pcl::PointCloud<pcl::PointXYZ>::Ptr& cu
     if(gap>maxGap){
       maxGap=gap;
       float midY_tmp = 0.5*(currentpcl->at(i+1).y+currentpcl->at(i).y);
-      if(midY_tmp<1.8 && midY_tmp>-1.2){
+      // if(midY_tmp<1.6 && midY_tmp>-1.1){
         midY = midY_tmp;
         midX = 0.5*(currentpcl->at(i+1).x+currentpcl->at(i).x);
-      }
+      // }
     }
   } 
   if(maxGap < 0.1){
