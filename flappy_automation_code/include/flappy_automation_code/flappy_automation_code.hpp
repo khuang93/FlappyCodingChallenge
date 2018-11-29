@@ -23,13 +23,37 @@ struct Point{
   }
 };
 
+struct Gap{
+    float top;
+    float bottom;
+    float x_begin;
+    float x_end;
+    int weight;
+    //Constructor
+    Gap(float _top, float _bottom, float _begin, float _end):
+    top(_top),bottom(_bottom),x_begin(_begin), x_end(_end){ 
+    }
+    //default constructor
+    Gap(){
+        top = 0.0f;
+        bottom = 0.0f;
+        x_begin = 0.0f;
+        x_end = 0.0f;
+    }
+};
+
+
 typedef pcl::PointCloud<pcl::PointXYZ> PointCloudXY;
 
 
 class SubscribeAndPublish
 {
-private:
+public:
     const float PIPE_WIDTH = 0.5;
+    const float MIN_GAP_SIZE = 0.3;
+private:
+    
+
     float y_top_wall = 0.0;
     float y_bottom_wall = 0.0; 
     int framesElapsed = 0;
@@ -48,8 +72,8 @@ private:
     Point closestPointTop  = Point(100.0,100.0);
     Point closestPointBot  = Point(100.0,100.0);
 
-    Point currentWayPoint = Point(0.0, 0.0);
-    Point nextWayPoint = Point(0.0, 0.0);
+    std::vector<Gap> Gaps;
+
 
 public:
     //Constructor
@@ -81,10 +105,16 @@ public:
 
     void getClosestPoints(pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl, Point& flappyPos);
     void getMiddleOfGap(PointCloudXY::Ptr& currentpcl);
+
+    void calculateGaps(PointCloudXY::Ptr& currentpcl);
+
+    void assignWeight2Gaps();
+    
     void updateFlappyPos(Point& flappyPos, float vx, float vy);
 
     float getXOfNextPipe();
-    void findGaps();
+    
+  
 
   
 private:

@@ -188,9 +188,33 @@ void SubscribeAndPublish::getMiddleOfGap(pcl::PointCloud<pcl::PointXYZ>::Ptr& cu
   } 
   if(maxGap < 0.1){
     midY = 0.0;
-  }
-  
+  }  
 }
+
+void SubscribeAndPublish::calculateGaps(PointCloudXY::Ptr& currentpcl){
+    // std::vector<Gap> Gaps;
+    
+    if(currentpcl->size()==0) return;
+    for(int i = 0; i < currentpcl->size()-1;i++){
+        float gap = currentpcl->at(i+1).y-currentpcl->at(i).y;
+        if(gap>this->MIN_GAP_SIZE){
+            float x_value = 0.5*(currentpcl->at(i+1).x + currentpcl->at(i).x);
+            Gap currentGap = 
+            Gap(currentpcl->at(i+1).y,currentpcl->at(i).y, x_value-0.5*PIPE_WIDTH, x_value+0.5*PIPE_WIDTH);
+            this->Gaps.push_back(currentGap);
+        }
+    }
+}
+
+void SubscribeAndPublish::assignWeight2Gaps(){
+    if(currentpcl->size()==0) return;
+    for(int i = 0; i < currentpcl->size()-1;i++){
+        for(int j = 0; j < this->Gaps.size();j++){
+            
+        }
+    }
+}
+
 
 void SubscribeAndPublish::getClosestPoints(pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl, Point& flappyPos){
   float minDistTop = 100.0f;
@@ -253,7 +277,6 @@ bool possibleCollision(pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl, Point& f
     float distY = newPos.y - currentpcl->at(i).y;
     if(distX < th || distY<th) return true;
   }
-  
 
   return false;
 }
