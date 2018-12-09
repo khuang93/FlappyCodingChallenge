@@ -44,7 +44,7 @@ void SubscribeAndPublish::velCallback(const geometry_msgs::Vector3::ConstPtr& ms
   float distBot = calculatePointDistance(flappyPos,closestPointBot);
 
 
-  // if(possibleCollision(currentpcl,flappyPos, vel)){
+
     if(distTop<0.25 && distBot <0.25){
       midY = (closestPointTop.y+closestPointBot.y)/2;
     }else if(distTop<0.25){
@@ -110,15 +110,6 @@ void SubscribeAndPublish::laserScanCallback(const sensor_msgs::LaserScan::ConstP
   // }
 }
 
-
-
-/* void SubscribeAndPublish::posCallback(const geometry_msgs::Vector3::ConstPtr& msg){
-
-}
-
-void SubscribeAndPublish::pclCallback(const sensor_msgs::PointCloud2::ConstPtr& msg){
-
-} */
 void convertLaserScan2PCL(PointCloudXY::Ptr mypcl, PointCloudXY::Ptr currentpcl, std::vector<float> ranges, float range_max, float range_min, float angle_min, float angle_max, float angle_increment, int number_laser_rays, const Point& flappyPos){
 
   for(int i = 0; i < ranges.size(); i++){
@@ -241,6 +232,11 @@ void SubscribeAndPublish::getClosestPoints(pcl::PointCloud<pcl::PointXYZ>::Ptr& 
   } 
 }
 
+int countPointsInRadius(Point pt, float r, pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl){
+  
+}
+
+
 double getMinXObstacleDist(pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl, Point& flappyPos){
   double minDist = 100.0;
   double minDistAbs = 100.0;
@@ -267,18 +263,6 @@ double getMinYObstacleDist(pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl, Poin
     }
   } 
   return minDist;
-}
-
-bool possibleCollision(pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl, Point& flappyPos, Point& vel){
-  Point newPos = Point(flappyPos.x+vel.x,flappyPos.y+vel.y);
-  float th = 0.2;
-  for(int i = 0; i < currentpcl->size();i++){
-    float distX = newPos.x - currentpcl->at(i).x;
-    float distY = newPos.y - currentpcl->at(i).y;
-    if(distX < th || distY<th) return true;
-  }
-
-  return false;
 }
 
 float calculatePointDistance(Point p1, Point p2){

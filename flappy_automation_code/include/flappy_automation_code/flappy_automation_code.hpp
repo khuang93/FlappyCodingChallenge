@@ -86,22 +86,10 @@ public:
         sub_vel = nh_->subscribe<geometry_msgs::Vector3>("/flappy_vel", 1, &SubscribeAndPublish::velCallback, this);
         sub_laser_scan = nh_->subscribe<sensor_msgs::LaserScan>("/flappy_laser_scan", 1, &SubscribeAndPublish::laserScanCallback, this);
 
-        /* //additional state publisher
-        pub_flappy_pos = nh_->advertise<geometry_msgs::Vector3>("/flappy_pos",1);
-        pub_pcl = nh_->advertise<sensor_msgs::PointCloud2>("/PCL",1);
-        // subscribers
-        sub_flappy_pos = nh_->subscribe<geometry_msgs::Vector3>("/flappy_pos",1, &SubscribeAndPublish::posCallback, this);
-        sub_pcl = nh_->subscribe<sensor_msgs::PointCloud2>("/PCL",1, &SubscribeAndPublish::pclCallback, this);
-
-         */
-
     }
 
     void velCallback(const geometry_msgs::Vector3::ConstPtr& msg);
     void laserScanCallback(const sensor_msgs::LaserScan::ConstPtr& msg);
-
-    // void posCallback(const geometry_msgs::Vector3::ConstPtr& msg);
-    // void pclCallback(const sensor_msgs::PointCloud2::ConstPtr& msg);
 
     void getClosestPoints(pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl, Point& flappyPos);
     void getMiddleOfGap(PointCloudXY::Ptr& currentpcl);
@@ -126,16 +114,6 @@ private:
     ros::Subscriber sub_vel;
     //Subscriber for laser scan
     ros::Subscriber sub_laser_scan;
-
-/*     //publisher flappy position
-    ros::Publisher pub_flappy_pos;
-    //publisher global pcl
-    ros::Publisher pub_pcl;
-    //Subscriber flappy position
-    ros::Subscriber sub_flappy_pos;
-    //Subscriber global pcl
-    ros::Subscriber sub_pcl; */
-
 };//End of class SubscribeAndPublish
 
 
@@ -158,11 +136,12 @@ bool comparePts (pcl::PointXYZ i, pcl::PointXYZ j) { return (i.y<j.y); }
 Point getClosestPointBot(pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl, Point& flappyPos);
 double getMinXObstacleDist(pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl, Point& flappyPos);
 double getMinYObstacleDist(pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl, Point& flappyPos);
-bool possibleCollision(pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl, Point& flappyPos, Point& vel);
+
 float calculatePointDistance(Point p1, Point p2);
 
 int countPointsInXRange(float min, float max, pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl);
 int countPointsInYRange(float min, float max, pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl);
+int countPointsInRadius(Point pt, float r, pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl);
 
 int filterPointsInXRange(float min, float max, pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl);
 int filterPointsInYRange(float min, float max, pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl);
