@@ -36,9 +36,6 @@ void SubscribeAndPublish::velCallback(const geometry_msgs::Vector3::ConstPtr& ms
     
 
   pcl::io::savePLYFileASCII("pointCloud.ply", *mypcl);
-
-
-  
   
   float distTop = calculatePointDistance(flappyPos,closestPointTop);
   float distBot = calculatePointDistance(flappyPos,closestPointBot);
@@ -62,7 +59,7 @@ void SubscribeAndPublish::velCallback(const geometry_msgs::Vector3::ConstPtr& ms
   //   vx_desired *=2;
   // }
   
-  Point vel = Point(vx_desired,vy_desired);
+  
     // if(minDistX > 0 && minDistX < 1 && std::abs(minDistY) < 0.2){
     //   vx_desired =  std::max(0.3*std::abs(minDistX),0.1);
     //   if(minDistY>0) {
@@ -103,6 +100,9 @@ void SubscribeAndPublish::laserScanCallback(const sensor_msgs::LaserScan::ConstP
   this->midX=midPoint.x;
   this->midY=midPoint.y;
 
+  this->calculateGaps(currentpcl);
+  this->assignWeight2Gaps();
+
   getClosestPoints(currentpcl, flappyPos);
   ROS_INFO("MidY  %f", midY);
   //  for(int i = 0; i < number_laser_rays; i++){
@@ -110,14 +110,14 @@ void SubscribeAndPublish::laserScanCallback(const sensor_msgs::LaserScan::ConstP
   // }
 }
 
-void convertLaserScan2PCL(PointCloudXY::Ptr mypcl, PointCloudXY::Ptr currentpcl, std::vector<float> ranges, float range_max, float range_min, float angle_min, float angle_max, float angle_increment, int number_laser_rays, const Point& flappyPos){
+void convertLaserScan2PCL(PointCloudXY::Ptr mypcl, PointCloudXY::Ptr currentpcl, std::vector<float> ranges, float range_max, float range_min, float angle_min, float angle_max, float angle_increment, int number_laser_rays, const pcl::PointXYZ& flappyPos){
 
   for(int i = 0; i < ranges.size(); i++){
     if(isValidPoint(ranges.at(i),range_max, range_min)){
       float current_angle = angle_min+i*angle_increment;
       float x = ranges.at(i)*cos(current_angle);
       float y = ranges.at(i)*sin(current_angle);
-      if(x<1 && std::abs(y)<2){
+      if(x<1 && std::abs(y)<3){
         mypcl->push_back(pcl::PointXYZ(x+flappyPos.x,y+flappyPos.y,0));
         // currentpcl->push_back(pcl::PointXYZ(x,y,0));
       }
@@ -137,7 +137,7 @@ void filterPCL(PointCloudXY::Ptr mypcl, PointCloudXY::Ptr currentpcl, float vx, 
   pcl::PointIndices::Ptr inliers(new pcl::PointIndices());
   pcl::ExtractIndices<pcl::PointXYZ> extract;
   if(mypcl->size()==0) return;
-  for (int i = 0; i < (*mypcl).size(); i++)
+  for (int i = 0; i < mypcl->size(); i++)
   {
     if ((mypcl->points[i].x- flappyPosX) < -0.3f || (mypcl->points[i].x- flappyPosX) > 1.2f ){
       inliers->indices.push_back(i);
@@ -150,7 +150,7 @@ void filterPCL(PointCloudXY::Ptr mypcl, PointCloudXY::Ptr currentpcl, float vx, 
 
 }
 
-void SubscribeAndPublish::updateFlappyPos(Point& flappyPos, float vx, float vy){
+void SubscribeAndPublish::updateFlappyPos(pcl::PointXYZ& flappyPos, float vx, float vy){
   float dX = vx/30;
   float dY = vy/30;
 
@@ -198,16 +198,26 @@ void SubscribeAndPublish::calculateGaps(PointCloudXY::Ptr& currentpcl){
 }
 
 void SubscribeAndPublish::assignWeight2Gaps(){
+  double dist_threshold = 1.0;
     if(currentpcl->size()==0) return;
     for(int i = 0; i < currentpcl->size()-1;i++){
+      
+      pcl::PointXYZ currentpt = currentpcl->at(i);
+      pcl::PointXYZ currentpoint(currentpt.x,currentpt.y,0.0f);
         for(int j = 0; j < this->Gaps.size();j++){
-            
+            Gap this_gap = this->Gaps.at(i);
+            double pt_x = ( this_gap.x_begin+this_gap.x_end ) / 2;
+            double pt_y = (this_gap.top+this_gap.bottom) / 2;
+            pcl::PointXYZ pt(pt_x,pt_y,0.0f);
+            if(calculatePointDistance(pt, currentpoint)<dist_threshold){
+              this_gap.weight++;
+            }
         }
     }
 }
 
 
-void SubscribeAndPublish::getClosestPoints(pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl, Point& flappyPos){
+void SubscribeAndPublish::getClosestPoints(pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl, pcl::PointXYZ& flappyPos){
   float minDistTop = 100.0f;
   float minDistBot = 100.0f;
   if(currentpcl->size()==0) return;
@@ -232,12 +242,18 @@ void SubscribeAndPublish::getClosestPoints(pcl::PointCloud<pcl::PointXYZ>::Ptr& 
   } 
 }
 
-int countPointsInRadius(Point pt, float r, pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl){
+int countPointsInRadius(pcl::PointXYZ pt, float r, pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl){
+  int res = 0;
+  // for(int i = 0; i < currentpcl->size();i++){
+  //   double tmp_dist = calculatePointDistance(pt, currentpcl->at(i));
+  //   if(tmp_dist>r) res++;
+  // }
   
+  return res;
 }
 
 
-double getMinXObstacleDist(pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl, Point& flappyPos){
+double getMinXObstacleDist(pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl, pcl::PointXYZ& flappyPos){
   double minDist = 100.0;
   double minDistAbs = 100.0;
   for(int i = 0; i < currentpcl->size();i++){
@@ -251,7 +267,7 @@ double getMinXObstacleDist(pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl, Poin
   return minDist;
 }
 
-double getMinYObstacleDist(pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl, Point& flappyPos){
+double getMinYObstacleDist(pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl, pcl::PointXYZ& flappyPos){
   double minDist = 100.0;
   double minDistAbs = 100.0;
   for(int i = 0; i < currentpcl->size();i++){
@@ -265,7 +281,7 @@ double getMinYObstacleDist(pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl, Poin
   return minDist;
 }
 
-float calculatePointDistance(Point p1, Point p2){
+float calculatePointDistance(pcl::PointXYZ p1, pcl::PointXYZ p2){
   float distX = p1.x - p2.x;
   float distY = p1.y - p2.y;
   return std::sqrt(distX*distX+distY*distY);
