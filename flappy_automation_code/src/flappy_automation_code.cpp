@@ -6,7 +6,7 @@
 #include <math.h>
 #include <pcl/cloud_iterator.h>
 #include <pcl/filters/passthrough.h>
-#include <pcl-1.7/pcl/filters/extract_indices.h>
+#include <pcl/filters/extract_indices.h>
 #include <algorithm>
 #include <functional>
 #include <array>
@@ -40,24 +40,25 @@ void SubscribeAndPublish::velCallback(const geometry_msgs::Vector3::ConstPtr& ms
   // midY = 0.5;
 
   float vy_desired = (midY-flappyPos.y);
-  float vx_desired = 0.3; //0.5*std::sqrt(minDistX*minDistX+minDistY*minDistY);
+  float vx_desired = 0.4; //0.5*std::sqrt(minDistX*minDistX+minDistY*minDistY);
   Point vel = Point(vx_desired,vy_desired);
   
-  if(possibleCollision(currentpcl,flappyPos, vel)){
-    // if(minDistX > 0 && minDistX < 1 && std::abs(minDistY) < 0.2){
-    //   vx_desired =  std::max(0.3*std::abs(minDistX),0.1);
-    //   if(minDistY>0) {
-    //     vy_desired = 4*(0.2 - minDistY);
-    //   }else{
-    //     vy_desired = 4*(-0.2 + minDistY);
-    //   }
-    // }
-  }
+  // if(possibleCollision(currentpcl,flappyPos, vel)){
+  //   if(minDistX > 0 && minDistX < 1 && std::abs(minDistY) < 0.2){
+  //     vx_desired =  std::max(0.3*std::abs(minDistX),0.1);
+  //     if(minDistY>0) {
+  //       vy_desired = 4*(0.2 - minDistY);
+  //     }else{
+  //       vy_desired = 4*(-0.2 + minDistY);
+  //     }
+  //   }
+  // }
   
   
 
 ROS_INFO("flappyVelDesired vx: %f, vy: %f", vx_desired, vy_desired);
-  float kp = 1.1;
+  float kp = 1.2;
+  float ki = 0.8;
   acc_cmd.x = kp*(vx_desired-msg->x);
   acc_cmd.y =  kp*(vy_desired-msg->y);
   // acc_cmd.y *= std::max(0.05, msg->y);
@@ -117,7 +118,7 @@ void convertLaserScan2PCL(PointCloudXY::Ptr mypcl, PointCloudXY::Ptr currentpcl,
   }
   std::sort(currentpcl->begin(),currentpcl->end(), comparePts );
 
-  pcl::io::savePLYFileASCII("currentpcl.ply", *currentpcl);
+  // pcl::io::savePLYFileASCII("currentpcl.ply", *currentpcl);
 }
 
 bool isValidPoint(float range, float range_max, float range_min){
@@ -131,7 +132,7 @@ void filterPCL(PointCloudXY::Ptr mypcl, PointCloudXY::Ptr currentpcl, float vx, 
   if(mypcl->size()==0) return;
   for (int i = 0; i < (*mypcl).size(); i++)
   {
-    if ((mypcl->points[i].x- flappyPosX) < -0.3f || (mypcl->points[i].x- flappyPosX) > 1.2f ){
+    if ((mypcl->points[i].x- flappyPosX) < -0.35f || (mypcl->points[i].x- flappyPosX) >1.2f ){
       inliers->indices.push_back(i);
     }
   }
