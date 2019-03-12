@@ -39,6 +39,11 @@ private:
     double midX=0.0;
     Point closestPointTop  = Point(100.0,100.0);
     Point closestPointBot  = Point(100.0,100.0);
+    float prev_vx=0.0;
+    float prev_vy=0.0;
+    int counter = 0;
+      pcl::PointXYZ min_bound;
+  pcl::PointXYZ max_bound;
 
 public:
     //Constructor
@@ -69,7 +74,10 @@ public:
     void pclCallback(const sensor_msgs::PointCloud2::ConstPtr& msg);
 
     void getClosestPoints(pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl, Point& flappyPos);
-  
+
+    void updateFlappyPos(Point& flappyPos, float vx, float vy);
+    void convertLaserScan2PCL(PointCloudXY::Ptr mypcl, PointCloudXY::Ptr currentpcl,std::vector<float> ranges, float range_max, float range_min, float angle_min, float angle_max, float angle_increment, int number_laser_rays,  const Point&flappyPos);
+    Point getMiddleOfGap(PointCloudXY::Ptr& currentpcl);
 private:
     //Ros nodehandle
     ros::NodeHandle* nh_= NULL;
@@ -98,15 +106,15 @@ private:
 void initNode();
 
 
-void convertLaserScan2PCL(PointCloudXY::Ptr mypcl, PointCloudXY::Ptr currentpcl,std::vector<float> ranges, float range_max, float range_min, float angle_min, float angle_max, float angle_increment, int number_laser_rays,  const Point&flappyPos);
+
 bool isValidPoint(float range, float range_max, float range_min);
 void filterPCL(PointCloudXY::Ptr mypcl, PointCloudXY::Ptr currentpcl, float vx, float vy, float flappyPosX);
-void updateFlappyPos(Point& flappyPos, float vx, float vy);
+// void updateFlappyPos(Point& flappyPos, float vx, float vy);
 void savePCL2PLY(PointCloudXY::Ptr mypcl);
 
 // bool comparePts (Point i,Point j) { return (i.y<j.y); }
 bool comparePts (pcl::PointXYZ i, pcl::PointXYZ j) { return (i.y<j.y); }
-Point getMiddleOfGap(PointCloudXY::Ptr& currentpcl);
+
 
 Point getClosestPointBot(pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl, Point& flappyPos);
 double getMinXObstacleDist(pcl::PointCloud<pcl::PointXYZ>::Ptr& currentpcl, Point& flappyPos);
