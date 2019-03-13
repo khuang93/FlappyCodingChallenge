@@ -44,11 +44,13 @@ private:
     int counter = 0;
       pcl::PointXYZ min_bound;
   pcl::PointXYZ max_bound;
-
+   std::ofstream midF;
+ std::ofstream posF;
 public:
     //Constructor
     SubscribeAndPublish():flappyPos(Point(0.0f,0.0f)),flappyPos_prev(Point(0.0f,0.0f)),mypcl(new pcl::PointCloud<pcl::PointXYZ>),currentpcl(new pcl::PointCloud<pcl::PointXYZ>)
     {
+
         //Initialization of nodehandle
         nh_ = new ros::NodeHandle();
         //Init publishers and subscribers
@@ -63,7 +65,8 @@ public:
         sub_flappy_pos = nh_->subscribe<geometry_msgs::Vector3>("/flappy_pos",1, &SubscribeAndPublish::posCallback, this);
         sub_pcl = nh_->subscribe<sensor_msgs::PointCloud2>("/PCL",1, &SubscribeAndPublish::pclCallback, this);
 
-
+        midF.open("midPoint.csv");
+        posF.open("position.csv");
 
     }
 
