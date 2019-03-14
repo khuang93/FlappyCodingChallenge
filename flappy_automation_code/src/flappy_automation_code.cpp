@@ -62,8 +62,9 @@ void SubscribeAndPublish::velCallback(const geometry_msgs::Vector3::ConstPtr& ms
 
   float vy_desired = distY/distX*vx_desired; //(midY-flappyPos.y); //change to distY / distX
 //   if(distX>0.1) vy_desired=vy_desired/distX*0.5;
-if(distX < 0) vy_desired = 0;
+if(distX < 0) vy_desired = - msg->y; //0;
 
+//TODO take into account the closest point in Y direction!!! (Maybe split the PCL into upper and lower)
 
   Point vel = Point(vx_desired,vy_desired);
   
@@ -112,7 +113,6 @@ void SubscribeAndPublish::laserScanCallback(const sensor_msgs::LaserScan::ConstP
   this->midY=midPoint.y;
 
  
-
 
 
 
