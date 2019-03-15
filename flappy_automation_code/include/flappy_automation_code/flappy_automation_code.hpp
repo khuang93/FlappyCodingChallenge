@@ -42,6 +42,9 @@ private:
     Point midPoint = Point(0.0,0.0);
     double midY=0.0;
     double midX=0.0;
+    double prev_midY = 0.0;
+    double midY_unfiltered=0.0;
+    int midY_consistent = 0;
     Point closestPointTop  = Point(100.0,100.0);
     Point closestPointBot  = Point(100.0,100.0);
     float prev_vx=0.0;
