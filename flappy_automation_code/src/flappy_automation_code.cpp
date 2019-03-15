@@ -39,11 +39,15 @@ void SubscribeAndPublish::velCallback(const geometry_msgs::Vector3::ConstPtr& ms
 
 
   pcl::getMinMax3D(*currentpcl,min_bound, max_bound);
+  float distX =0, distY=0;
+ if(!currentpcl->empty()){
+ 
+    distX = min_bound.x - flappyPos.x -0.02;
+    distY = midY - flappyPos.y;
+ }
 
-   float distX = min_bound.x - flappyPos.x -0.02;
-   float distY = midY - flappyPos.y;
     // distX = min_bound.x - flappyPos.x;
-    if(distX<0) distX = -0.02;
+    if(distX<0) distX =  distX > -0.05 ? distX : -0.05;
 
   
     
@@ -59,7 +63,7 @@ void SubscribeAndPublish::velCallback(const geometry_msgs::Vector3::ConstPtr& ms
   // midY = 0.5;
  
 
-  float vx_desired = 0.22 + distX; //0.4; //0.5*std::sqrt(minDistX*minDistX+minDistY*minDistY);
+  float vx_desired = 0.27 + 0.5*distX; //0.4; //0.5*std::sqrt(minDistX*minDistX+minDistY*minDistY);
 
   float vy_desired = distY; // /distX*vx_desired; //(midY-flappyPos.y); //change to distY / distX
 //   if(distX>0.1) vy_desired=vy_desired/distX*0.5;
@@ -68,13 +72,13 @@ void SubscribeAndPublish::velCallback(const geometry_msgs::Vector3::ConstPtr& ms
 
 
 
-  float kp =0.2;
+  float kp =1.1;
   float kp_x  = 0.9;
-  float ki = 1.2;
-  float kd = -0.1;
-  if(distX < 0) {
+  float ki = 1.1;
+  float kd = 0.9;
+  if(distX < -0.02) {
     vy_desired = 0;
-    distY = 0;
+    // distY = 0;
   }
   ROS_INFO("flappyVelDesired vx: %f, vy: %f", vx_desired, vy_desired);
   double integral_x =distX + prev_error.x;
@@ -86,6 +90,7 @@ void SubscribeAndPublish::velCallback(const geometry_msgs::Vector3::ConstPtr& ms
   double diff_y = distY - prev_error.y;
   prev_error.x=distX;
   prev_error.y=distY;
+  // diff_vy_error = vy_desired - 
 
 //TODO take into account the closest point in Y direction!!! (Maybe split the PCL into upper and lower)
 
@@ -152,7 +157,7 @@ void SubscribeAndPublish::convertLaserScan2PCL(PointCloudXY::Ptr mypcl, PointClo
       float x = ranges.at(i)*cos(current_angle);// - prev_vx/30*0.5;
       float y = ranges.at(i)*sin(current_angle);// - prev_vy/30*0.5;
       // if(x<1 && y<1){
-          if(counter>150){
+          if(counter>180){
               mypcl->erase(mypcl->begin());
           }
         mypcl->push_back(pcl::PointXYZ(x+flappyPos_prev.x,y+flappyPos_prev.y,0));
@@ -176,13 +181,13 @@ void filterPCL(PointCloudXY::Ptr mypcl, PointCloudXY::Ptr currentpcl, float vx, 
   if(mypcl->size()==0) return;
   for (int i = 0; i < (*mypcl).size(); i++)
   {
-    if ((mypcl->points[i].x- flappyPosX) < -0.35f || (mypcl->points[i].x- flappyPosX) >1.2f ){
+    if ((mypcl->points[i].x- flappyPosX) > -0.35f && (mypcl->points[i].x- flappyPosX) < 1.1f && mypcl->points[i].y < 1.8 && mypcl->points[i].y > -1.3 ){
       inliers->indices.push_back(i);
     }
   }
   extract.setInputCloud(mypcl);
   extract.setIndices(inliers);
-  extract.setNegative(true);
+  extract.setNegative(false);
   extract.filter(*currentpcl);
 
 }
@@ -210,7 +215,7 @@ Point SubscribeAndPublish::getMiddleOfGap(pcl::PointCloud<pcl::PointXYZ>::Ptr& c
     if(gap>maxGap){
       maxGap=gap;
       double midY_tmp = 0.5*(currentpcl->at(i+1).y+currentpcl->at(i).y);
-      if(midY_tmp<2 && midY_tmp>-1.2){
+      if(midY_tmp<2.2 && midY_tmp>-1.2){
         _midY = midY_tmp;
         double midX = 0.5*(currentpcl->at(i+1).x+currentpcl->at(i).x);
       }
@@ -221,17 +226,17 @@ Point SubscribeAndPublish::getMiddleOfGap(pcl::PointCloud<pcl::PointXYZ>::Ptr& c
 
   //if gap is far far above or below and not captured by lidar
   if(maxGap < 0.1){ //was 0.1
-
-    // if(this->flappyPos.y<0.5) {
-    //   _midY = flappyPos.y + 0.3;
-    //   this->midY = _midY;
-    //     return Point(midX,_midY);
-    //   }
-    // else{
-    //    _midY = flappyPos.y - 0.3;
-    //    this->midY = _midY;
-    //      return Point(midX,_midY);
-    //    }
+//0.5 is the midpoint of the bird
+    if(this->flappyPos.y<0.5) {
+      _midY = flappyPos.y + 0.3;
+      this->midY = _midY;
+        return Point(midX,_midY);
+      }
+    else{
+       _midY = flappyPos.y - 0.3;
+       this->midY = _midY;
+         return Point(midX,_midY);
+       }
    _midY = prev_midY; //was 0
     // if(flappyPos.y>0 && min_bound.y > -1.2) midY=min_bound.y+0.1;
     // else if(max_bound.y < 1.5)  midY=max_bound.y-0.1;
@@ -241,7 +246,7 @@ Point SubscribeAndPublish::getMiddleOfGap(pcl::PointCloud<pcl::PointXYZ>::Ptr& c
 
   
   float TH = 0.05f;
-
+  double delta_midY = std::abs(_midY-midY_unfiltered);
   if(_midY-midY_unfiltered<TH && midY_unfiltered-_midY<TH){
     midY_consistent++;
   }else{
@@ -250,11 +255,17 @@ Point SubscribeAndPublish::getMiddleOfGap(pcl::PointCloud<pcl::PointXYZ>::Ptr& c
 midY_unfiltered=_midY;
   ROS_INFO("#################################### prev_midY %f, _midY %f, midY_consistent  %i", prev_midY, _midY, midY_consistent);
 
-  if(midY_consistent>4){
+//if midY change is large require consistency
+if(delta_midY>0.75){
+   if(midY_consistent>12){
       prev_midY=_midY;
   }else{
       _midY=prev_midY;
   }
+}else{
+  prev_midY=_midY;
+}
+ 
   this->midY = _midY;
   return Point(midX,_midY);
 
@@ -266,8 +277,12 @@ void SubscribeAndPublish::getClosestPoints(pcl::PointCloud<pcl::PointXYZ>::Ptr& 
   if(currentpcl->size()==0) return;
 
   for(int i = 0; i < currentpcl->size();i++){
-    float distY = flappyPos.y - currentpcl->at(i).y;
-    float distX = flappyPos.x - currentpcl->at(i).x;
+    float distY=0, distX=0;
+    if(!currentpcl->empty()){
+      distY = flappyPos.y - currentpcl->at(i).y;
+      distX = flappyPos.x - currentpcl->at(i).x;
+    }
+
     float dist = sqrt(distX*distX+distY*distY);
     if(distY<0){
       if(dist<minDistTop && dist < 1){
