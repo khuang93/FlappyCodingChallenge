@@ -43,7 +43,7 @@ void SubscribeAndPublish::velCallback(const geometry_msgs::Vector3::ConstPtr& ms
    float distX = min_bound.x - flappyPos.x -0.02;
    float distY = midY - flappyPos.y;
     // distX = min_bound.x - flappyPos.x;
-    if(distX<0) distX = -0.05;
+    if(distX<0) distX = -0.02;
 
   
     
@@ -59,7 +59,7 @@ void SubscribeAndPublish::velCallback(const geometry_msgs::Vector3::ConstPtr& ms
   // midY = 0.5;
  
 
-  float vx_desired = 0.3 + distX; //0.4; //0.5*std::sqrt(minDistX*minDistX+minDistY*minDistY);
+  float vx_desired = 0.22 + distX; //0.4; //0.5*std::sqrt(minDistX*minDistX+minDistY*minDistY);
 
   float vy_desired = distY; // /distX*vx_desired; //(midY-flappyPos.y); //change to distY / distX
 //   if(distX>0.1) vy_desired=vy_desired/distX*0.5;
@@ -68,7 +68,7 @@ void SubscribeAndPublish::velCallback(const geometry_msgs::Vector3::ConstPtr& ms
 
 
 
-  float kp =0.1;
+  float kp =0.2;
   float kp_x  = 0.9;
   float ki = 1.2;
   float kd = -0.1;
@@ -222,17 +222,17 @@ Point SubscribeAndPublish::getMiddleOfGap(pcl::PointCloud<pcl::PointXYZ>::Ptr& c
   //if gap is far far above or below and not captured by lidar
   if(maxGap < 0.1){ //was 0.1
 
-    if(this->flappyPos.y<0.5) {
-      _midY = flappyPos.y + 0.5;
-      this->midY = _midY;
-        return Point(midX,_midY);
-      }
-    else{
-       _midY = flappyPos.y - 0.5;
-       this->midY = _midY;
-         return Point(midX,_midY);
-       }
-   // _midY = prev_midY; //was 0
+    // if(this->flappyPos.y<0.5) {
+    //   _midY = flappyPos.y + 0.3;
+    //   this->midY = _midY;
+    //     return Point(midX,_midY);
+    //   }
+    // else{
+    //    _midY = flappyPos.y - 0.3;
+    //    this->midY = _midY;
+    //      return Point(midX,_midY);
+    //    }
+   _midY = prev_midY; //was 0
     // if(flappyPos.y>0 && min_bound.y > -1.2) midY=min_bound.y+0.1;
     // else if(max_bound.y < 1.5)  midY=max_bound.y-0.1;
     // if(2.5 < midY || midY<-1.4) midY = 0.2;
@@ -248,9 +248,9 @@ Point SubscribeAndPublish::getMiddleOfGap(pcl::PointCloud<pcl::PointXYZ>::Ptr& c
     midY_consistent=0;
   }
 midY_unfiltered=_midY;
-  ROS_INFO("#################################### prev_midY %f, midY %f, midY_consistent  %i", prev_midY, midY, midY_consistent);
+  ROS_INFO("#################################### prev_midY %f, _midY %f, midY_consistent  %i", prev_midY, _midY, midY_consistent);
 
-  if(midY_consistent>5){
+  if(midY_consistent>4){
       prev_midY=_midY;
   }else{
       _midY=prev_midY;
