@@ -40,15 +40,16 @@ void SubscribeAndPublish::velCallback(const geometry_msgs::Vector3::ConstPtr& ms
 
   pcl::getMinMax3D(*currentpcl,min_bound, max_bound);
 
-   float distX = min_bound.x - flappyPos.x;
+   float distX = min_bound.x - flappyPos.x -0.05;
    float distY = midY - flappyPos.y;
     // distX = min_bound.x - flappyPos.x;
     if(distX<0) distX = -0.05;
 
-
+  
     
-    posF<<flappyPos.x<<", "<<flappyPos.y<<std::endl;
+  posF<<flappyPos.x<<", "<<flappyPos.y<<std::endl;
   midF<<midX<<", "<<midY<<std::endl;
+
 
   ROS_INFO("flappyPos x: %f, y: %f, distX: %f", flappyPos.x,  flappyPos.y, distX);
   ROS_INFO("flappyVel vx: %f, vy: %f", msg->x, msg->y);
@@ -62,11 +63,7 @@ void SubscribeAndPublish::velCallback(const geometry_msgs::Vector3::ConstPtr& ms
 
   float vy_desired = distY/distX*vx_desired; //(midY-flappyPos.y); //change to distY / distX
 //   if(distX>0.1) vy_desired=vy_desired/distX*0.5;
-if(distX < 0) vy_desired = - msg->y; //0;
 
-//TODO take into account the closest point in Y direction!!! (Maybe split the PCL into upper and lower)
-
-  Point vel = Point(vx_desired,vy_desired);
   
   // if(possibleCollision(currentpcl,flappyPos, vel)){
   //   if(minDistX > 0 && minDistX < 1 && std::abs(minDistY) < 0.2){
@@ -82,10 +79,30 @@ if(distX < 0) vy_desired = - msg->y; //0;
   
 
 ROS_INFO("flappyVelDesired vx: %f, vy: %f", vx_desired, vy_desired);
-  float kp = 1.2;
-  float ki = 0.8;
-  acc_cmd.x = kp*(vx_desired-msg->x);
-  acc_cmd.y =  kp*(vy_desired-msg->y);
+  float kp = 1.1;
+  float kp_x  = 0.9;
+  float ki = 0;
+  float kd = 0.35;
+if(distX < 0) {
+  vy_desired = 0;
+  distY = 0;
+}
+
+  double integral_x =distX + prev_error.x;
+  double integral_y =distY + prev_error.y;
+  double dT=1/30;
+  double diff_x = distX - prev_error.x;
+  double diff_y = distY - prev_error.y;
+  prev_error.x=distX;
+  prev_error.y=distY;
+
+//TODO take into account the closest point in Y direction!!! (Maybe split the PCL into upper and lower)
+
+  Point vel = Point(vx_desired,vy_desired);
+
+  // acc_cmd.x = ki*distX + kp*(vx_desired-msg->x)*dT + kd*diff_x*30;
+  acc_cmd.x = kp_x*(vx_desired-msg->x);
+  acc_cmd.y = kp*distY + ki*(integral_y)*dT + kd*diff_y*30;
   // acc_cmd.y *= std::max(0.05, msg->y);
   
   // acc_cmd.y  = 0;
@@ -138,13 +155,13 @@ void SubscribeAndPublish::convertLaserScan2PCL(PointCloudXY::Ptr mypcl, PointClo
   for(int i = 0; i < ranges.size(); i++){
     if(isValidPoint(ranges.at(i),range_max, range_min)){
       float current_angle = angle_min+i*angle_increment;
-      float x = ranges.at(i)*cos(current_angle);
-      float y = ranges.at(i)*sin(current_angle);
+      float x = ranges.at(i)*cos(current_angle);// - prev_vx/30*0.5;
+      float y = ranges.at(i)*sin(current_angle);// - prev_vy/30*0.5;
       // if(x<1 && y<1){
-          if(counter>150){
-              mypcl->erase(mypcl->begin());
-          }
-        mypcl->push_back(pcl::PointXYZ(x+flappyPos.x,y+flappyPos.y,0));
+          // if(counter>150){
+          //     mypcl->erase(mypcl->begin());
+          // }
+        mypcl->push_back(pcl::PointXYZ(x+flappyPos_prev.x,y+flappyPos_prev.y,0));
         // currentpcl->push_back(pcl::PointXYZ(x,y,0));
       // }
     }

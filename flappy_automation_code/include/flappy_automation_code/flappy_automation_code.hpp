@@ -21,6 +21,11 @@ struct Point{
   Point(float _x, float _y):x(_x),y(_y){ 
       type = 0;
   }
+  Point(){
+      x=0.0f;
+      y=0.0f;
+      type=0;
+  }
 };
 
 typedef pcl::PointCloud<pcl::PointXYZ> PointCloudXY;
@@ -46,6 +51,7 @@ private:
   pcl::PointXYZ max_bound;
    std::ofstream midF;
  std::ofstream posF;
+ Point prev_error;
 public:
     //Constructor
     SubscribeAndPublish():flappyPos(Point(0.0f,0.0f)),flappyPos_prev(Point(0.0f,0.0f)),mypcl(new pcl::PointCloud<pcl::PointXYZ>),currentpcl(new pcl::PointCloud<pcl::PointXYZ>)
@@ -67,6 +73,9 @@ public:
 
         midF.open("midPoint.csv");
         posF.open("position.csv");
+
+        prev_error.x=0.0f;
+        prev_error.y=0.0f;
 
     }
 
