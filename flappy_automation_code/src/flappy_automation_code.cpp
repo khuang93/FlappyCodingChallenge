@@ -59,7 +59,7 @@ void SubscribeAndPublish::velCallback(const geometry_msgs::Vector3::ConstPtr& ms
   // midY = 0.5;
  
 
-  float vx_desired = 0.2 + distX; //0.4; //0.5*std::sqrt(minDistX*minDistX+minDistY*minDistY);
+  float vx_desired = 0.3 + distX; //0.4; //0.5*std::sqrt(minDistX*minDistX+minDistY*minDistY);
 
   float vy_desired = distY; // /distX*vx_desired; //(midY-flappyPos.y); //change to distY / distX
 //   if(distX>0.1) vy_desired=vy_desired/distX*0.5;
@@ -68,10 +68,10 @@ void SubscribeAndPublish::velCallback(const geometry_msgs::Vector3::ConstPtr& ms
 
 
 
-  float kp =1.1;
+  float kp =0.1;
   float kp_x  = 0.9;
-  float ki = 0.8;
-  float kd = 0.1;
+  float ki = 1.2;
+  float kd = -0.1;
   if(distX < 0) {
     vy_desired = 0;
     distY = 0;
@@ -216,15 +216,30 @@ Point SubscribeAndPublish::getMiddleOfGap(pcl::PointCloud<pcl::PointXYZ>::Ptr& c
       }
     }
   } 
+
+  midX = 0.5*(max_bound.x+min_bound.x);
+
+  //if gap is far far above or below and not captured by lidar
   if(maxGap < 0.1){ //was 0.1
-    _midY = prev_midY; //was 0
+
+    if(this->flappyPos.y<0.5) {
+      _midY = flappyPos.y + 0.5;
+      this->midY = _midY;
+        return Point(midX,_midY);
+      }
+    else{
+       _midY = flappyPos.y - 0.5;
+       this->midY = _midY;
+         return Point(midX,_midY);
+       }
+   // _midY = prev_midY; //was 0
     // if(flappyPos.y>0 && min_bound.y > -1.2) midY=min_bound.y+0.1;
     // else if(max_bound.y < 1.5)  midY=max_bound.y-0.1;
     // if(2.5 < midY || midY<-1.4) midY = 0.2;
   }
 
 
-  midX = 0.5*(max_bound.x+min_bound.x);
+  
   float TH = 0.05f;
 
   if(_midY-midY_unfiltered<TH && midY_unfiltered-_midY<TH){
