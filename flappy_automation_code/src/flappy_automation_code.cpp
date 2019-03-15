@@ -75,10 +75,10 @@ void SubscribeAndPublish::velCallback(const geometry_msgs::Vector3::ConstPtr& ms
   float kp =1.1;
   float kp_x  = 0.9;
   float ki = 1.1;
-  float kd = 0.9;
-  if(distX < -0.02) {
+  float kd = 0.85;
+  if(distX < -0.025) {
     vy_desired = 0;
-    // distY = 0;
+     distY = 0;
   }
   ROS_INFO("flappyVelDesired vx: %f, vy: %f", vx_desired, vy_desired);
   double integral_x =distX + prev_error.x;
@@ -181,7 +181,7 @@ void filterPCL(PointCloudXY::Ptr mypcl, PointCloudXY::Ptr currentpcl, float vx, 
   if(mypcl->size()==0) return;
   for (int i = 0; i < (*mypcl).size(); i++)
   {
-    if ((mypcl->points[i].x- flappyPosX) > -0.35f && (mypcl->points[i].x- flappyPosX) < 1.1f && mypcl->points[i].y < 1.8 && mypcl->points[i].y > -1.3 ){
+    if ((mypcl->points[i].x- flappyPosX) > -0.35f && (mypcl->points[i].x- flappyPosX) < 1.8f && mypcl->points[i].y < 1.8 && mypcl->points[i].y > -1.3 ){
       inliers->indices.push_back(i);
     }
   }
