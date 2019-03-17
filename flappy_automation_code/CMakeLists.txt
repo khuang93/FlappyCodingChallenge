@@ -1,10 +1,13 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(flappy_automation_code)
 
+set (CMAKE_CXX_STANDARD 11)
+
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  PCL
 )
 
 catkin_package(
@@ -20,5 +23,5 @@ include_directories(
 add_executable(${PROJECT_NAME}_node src/flappy_automation_code.cpp)
 
 target_link_libraries(${PROJECT_NAME}_node
-   ${catkin_LIBRARIES}
+${PCL_LIBRARIES} ${catkin_LIBRARIES}
 )

@@ -6,6 +6,11 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
 )
+
 include_directories(
   ${catkin_INCLUDE_DIRS}
+)
+catkin_package(
+  INCLUDE_DIRS 
+  CATKIN_DEPENDS roscpp rospy std_msgs
 )
