@@ -24,13 +24,11 @@
 #include <fstream>
 #include <math.h>
 
-#include <fstream>
-
 //global variables in this file for easier tuning
 static const int max_time_counter = 150; //points older than this will be removed from the point cloud
 static const float vx_base = 0.32f;
 //filter for the current interesting points in x
-static const float filter_x_min = -0.1f; //was -0.35
+static const float filter_x_min = -0.15f; //was -0.35
 static const float filter_x_max = 1.7f;  //was 1.8
 //filter out walls
 static const float filter_y_max = 2.1f;  //was 1.8
@@ -42,9 +40,9 @@ static const float min_gap_TH = 0.15f; //was 0.1
 //for x
 static const float kp_x = 0.9;
 //for y
-static const float kp = 1.13; //1.1
+static const float kp = 1.1; //1.1
 static const float kp_vy = 1.13; //1.1
-static const float ki = 0.5*30; //1.1
+static const float ki = 0.6*30; //0.5
 static const float kd = 0.85; //0.85
 
 void initNode()
@@ -90,10 +88,9 @@ void SubscribeAndPublish::velCallback(const geometry_msgs::Vector3::ConstPtr &ms
 
   // pcl::io::savePLYFileASCII("pointCloud.ply", *mypcl);
 
-  float vx_desired = vx_base + 0.5 * distX; //0.4; //0.5*std::sqrt(minDistX*minDistX+minDistY*minDistY);
+  float vx_desired = vx_base + 0.5 * distX; 
 
-  float vy_desired = distY; // /distX*vx_desired; //(midY-flappyPos.y); //change to distY / distX
-                            //   if(distX>0.1) vy_desired=vy_desired/distX*0.5;
+  float vy_desired = distY; // /distX*vx_desired; 
 
   //if in the middle of a gap, dont move
   if (distX < -0.04) //was -0.025
@@ -101,7 +98,7 @@ void SubscribeAndPublish::velCallback(const geometry_msgs::Vector3::ConstPtr &ms
     vy_desired = 0;
     distY = 0;
   }
-  ROS_INFO("flappyVelDesired vx: %f, vy: %f", vx_desired, vy_desired);
+  ROS_INFO("flappyVelDesired vx_desired: %f, vy_desired: %f", vx_desired, vy_desired);
   double integral_x = distX + prev_error.x;
   double integral_y = distY + prev_error.y;
 
@@ -114,10 +111,12 @@ void SubscribeAndPublish::velCallback(const geometry_msgs::Vector3::ConstPtr &ms
   //TODO take into account the closest point in Y direction!!! (Maybe split the PCL into upper and lower)
 
   // acc_cmd.x = ki*distX + kp*(vx_desired-msg->x)*dT + kd*diff_x*30;
+  //P Control of vx
   acc_cmd.x = kp_x * (vx_desired - msg->x);
 
   //acc_cmd.y = kp*distY + ki*(vy_desired-msg->y)*dT + kd*diff_y*30;
 
+  //PID of pos y with additional term for vy
   acc_cmd.y = kp * distY + kp_vy * (vy_desired - msg->y) + ki*integral_y*dT + kd * diff_y * this->FPS;
 
   ROS_INFO("Accel ax: %f, ay: %f", acc_cmd.x, acc_cmd.y);
@@ -142,7 +141,7 @@ void SubscribeAndPublish::laserScanCallback(const sensor_msgs::LaserScan::ConstP
   this->midX = midPoint.x;
   this->midY = midPoint.y;
 
-  // getClosestPoints(currentpcl, flappyPos); //currently not using this
+  // calculateClosestPoints(currentpcl, flappyPos); //currently not using this
 
   //debug output
   ROS_INFO("MidX  %f, MidY  %f", midX, midY);
@@ -254,7 +253,8 @@ Point SubscribeAndPublish::calculateMidpointOfGap(pcl::PointCloud<pcl::PointXYZ>
     midY_consistent = 0;
   }
   this->midY_unfiltered = _midY;
-  ROS_INFO("#################################### prev_midY %f, _midY %f, midY_consistent  %i", prev_midY, _midY, midY_consistent);
+  //degug output
+  //ROS_INFO("#################################### prev_midY %f, _midY %f, midY_consistent  %i", prev_midY, _midY, midY_consistent);
 
   //if midY change is large or bird very close to the obstacles, require consistency before change midY
   if (delta_midY_abs > 0.75 /* || distX < 0.2*/)
@@ -286,7 +286,7 @@ Point SubscribeAndPublish::calculateMidpointOfGap(pcl::PointCloud<pcl::PointXYZ>
   return Point(midX, _midY);
 }
 
-void SubscribeAndPublish::getClosestPoints(pcl::PointCloud<pcl::PointXYZ>::Ptr &currentpcl, Point &flappyPos)
+void SubscribeAndPublish::calculateClosestPoints(pcl::PointCloud<pcl::PointXYZ>::Ptr &currentpcl, Point &flappyPos)
 {
   float minDistTop = 100.0f;
   float minDistBot = 100.0f;
@@ -338,6 +338,7 @@ void filterPCL(PointCloudXY::Ptr mypcl, PointCloudXY::Ptr currentpcl, float vx, 
     return;
   for (int i = 0; i < (*mypcl).size(); i++)
   {
+    //filter out only the points in certain range
     if ((mypcl->points[i].x - flappyPosX) > filter_x_min && (mypcl->points[i].x - flappyPosX) < filter_x_max && mypcl->points[i].y < filter_y_max && mypcl->points[i].y > filter_y_min)
     {
       inliers->indices.push_back(i);

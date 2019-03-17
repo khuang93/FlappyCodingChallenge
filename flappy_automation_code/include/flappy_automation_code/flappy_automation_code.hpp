@@ -113,7 +113,13 @@ class SubscribeAndPublish
     void velCallback(const geometry_msgs::Vector3::ConstPtr &msg);
     void laserScanCallback(const sensor_msgs::LaserScan::ConstPtr &msg);
 
-    void getClosestPoints(pcl::PointCloud<pcl::PointXYZ>::Ptr &currentpcl, Point &flappyPos);
+    /**
+     * @brief calculate the Closest Points to the current bird. Not used yet, could be used to improve robustness
+     * 
+     * @param currentpcl 
+     * @param flappyPos 
+     */
+    void calculateClosestPoints(pcl::PointCloud<pcl::PointXYZ>::Ptr &currentpcl, Point &flappyPos);
 
     /**
      * @brief update position of flappy using incoming velocity
