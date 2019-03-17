@@ -26,7 +26,7 @@
 
 //global variables in this file for easier tuning
 static const int max_time_counter = 160; //points older than this will be removed from the point cloud
-static const float vx_base = 0.32f;
+static const float vx_base = 0.45f;
 //filter for the current interesting points in x
 static const float filter_x_min = -0.18f; //was -0.35
 static const float filter_x_max = 1.7f;   //was 1.8
