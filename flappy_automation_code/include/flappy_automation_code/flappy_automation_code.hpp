@@ -1,3 +1,13 @@
+/**
+ * @file flappy_automation_code.hpp
+ * @author your name (you@domain.com) modified by Kailin Huang, kailin-huang@outlook.com
+ * @brief code for Flyability Application
+ * @version 0.3
+ * @date 2019-03-17
+ * 
+ * @copyright Copyright (c) 2019
+ * 
+ */
 #ifndef FLAPPY_AUTOMATION_CODE_H_
 #define FLAPPY_AUTOMATION_CODE_H_
 

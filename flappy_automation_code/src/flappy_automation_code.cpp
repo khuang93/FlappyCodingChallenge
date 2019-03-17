@@ -1,8 +1,8 @@
 /**
  * @file flappy_automation_code.cpp
  * @author your name (you@domain.com) modified by Kailin Huang, kailin-huang@outlook.com
- * @brief 
- * @version 0.1
+ * @brief code for Flyability Application
+ * @version 0.3
  * @date 2019-03-17
  * 
  * @copyright Copyright (c) 2019
@@ -25,11 +25,11 @@
 #include <math.h>
 
 //global variables in this file for easier tuning
-static const int max_time_counter = 150; //points older than this will be removed from the point cloud
+static const int max_time_counter = 160; //points older than this will be removed from the point cloud
 static const float vx_base = 0.32f;
 //filter for the current interesting points in x
-static const float filter_x_min = -0.15f; //was -0.35
-static const float filter_x_max = 1.7f;  //was 1.8
+static const float filter_x_min = -0.18f; //was -0.35
+static const float filter_x_max = 1.7f;   //was 1.8
 //filter out walls
 static const float filter_y_max = 2.1f;  //was 1.8
 static const float filter_y_min = -1.1f; //was -1.3
@@ -40,10 +40,10 @@ static const float min_gap_TH = 0.15f; //was 0.1
 //for x
 static const float kp_x = 0.9;
 //for y
-static const float kp = 1.1; //1.1
-static const float kp_vy = 1.13; //1.1
-static const float ki = 0.6*30; //0.5
-static const float kd = 0.85; //0.85
+static const float kp = 1.1;      //1.1
+static const float kp_vy = 1.13;  //1.1
+static const float ki = 0.6 * 30; //0.5
+static const float kd = 0.85;     //0.85
 
 void initNode()
 {
@@ -88,9 +88,9 @@ void SubscribeAndPublish::velCallback(const geometry_msgs::Vector3::ConstPtr &ms
 
   // pcl::io::savePLYFileASCII("pointCloud.ply", *mypcl);
 
-  float vx_desired = vx_base + 0.5 * distX; 
+  float vx_desired = vx_base + 0.5 * distX;
 
-  float vy_desired = distY; // /distX*vx_desired; 
+  float vy_desired = distY; // /distX*vx_desired;
 
   //if in the middle of a gap, dont move
   if (distX < -0.04) //was -0.025
@@ -117,7 +117,7 @@ void SubscribeAndPublish::velCallback(const geometry_msgs::Vector3::ConstPtr &ms
   //acc_cmd.y = kp*distY + ki*(vy_desired-msg->y)*dT + kd*diff_y*30;
 
   //PID of pos y with additional term for vy
-  acc_cmd.y = kp * distY + kp_vy * (vy_desired - msg->y) + ki*integral_y*dT + kd * diff_y * this->FPS;
+  acc_cmd.y = kp * distY + kp_vy * (vy_desired - msg->y) + ki * integral_y * dT + kd * diff_y * this->FPS;
 
   ROS_INFO("Accel ax: %f, ay: %f", acc_cmd.x, acc_cmd.y);
 
