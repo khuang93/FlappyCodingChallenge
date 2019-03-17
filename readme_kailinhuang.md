@@ -80,3 +80,5 @@ One key issue which I haven't solved completely is the point cloud's consistency
 I have several functions implemented but not really tested and used. They are there for detection the points which are very close to the bird. If the are detected we can then add some micro-adjustments to make sure the bird can steer away from them.
 
 Another problem is, the code contains many parameters which are fine tuned during testing. Some part of the code are done "quick and dirty", for example we could use RANSAC to detect walls above and below the bird, if the distance of the wall are not fixed. But in this case I chose to use the regularities to simplify the code and using more hardcoded parameters. It is clear that for a more general-purpose use of the algorithm we need to change the way how these hard coded parameters are estimated.
+
+We might also use some reinforcement learning to estimate some of the parameters or even make it end-to-end for the navigation. However I have little experience in reinforcement learning and in this rather simple game, it was sufficient to tune the code manually and add some hard coded rules.
