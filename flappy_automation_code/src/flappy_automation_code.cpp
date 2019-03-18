@@ -25,8 +25,8 @@
 #include <math.h>
 
 //global variables in this file for easier tuning
-static const int max_time_counter = 160; //points older than this will be removed from the point cloud
-static const float vx_base = 0.45f;
+static const int max_time_counter = 60; //points older than this will be removed from the point cloud
+static const float vx_base = 2.2f;
 //filter for the current interesting points in x
 static const float filter_x_min = -0.18f; //was -0.35
 static const float filter_x_max = 1.7f;   //was 1.8
@@ -40,10 +40,10 @@ static const float min_gap_TH = 0.15f; //was 0.1
 //for x
 static const float kp_x = 0.9;
 //for y
-static const float kp = 1.1;      //1.1
-static const float kp_vy = 1.13;  //1.1
-static const float ki = 0.6 * 30; //0.5
-static const float kd = 0.85;     //0.85
+static const float kp = 1.5;      //1.1
+static const float kp_vy = 10; //1.13;  //1.1
+static const float ki = 0.3 * 30; //0.5
+static const float kd =0.85;     //0.85
 
 void initNode()
 {
@@ -90,7 +90,8 @@ void SubscribeAndPublish::velCallback(const geometry_msgs::Vector3::ConstPtr &ms
 
   float vx_desired = vx_base + 0.5 * distX;
 
-  float vy_desired = distY; // /distX*vx_desired;
+  float vy_desired = 9*distY; // /distX*vx_desired;
+//   vy_desired=std::min(2.5f,vy_desired);
 
   //if in the middle of a gap, dont move
   if (distX < -0.04) //was -0.025
@@ -117,8 +118,10 @@ void SubscribeAndPublish::velCallback(const geometry_msgs::Vector3::ConstPtr &ms
   //acc_cmd.y = kp*distY + ki*(vy_desired-msg->y)*dT + kd*diff_y*30;
 
   //PID of pos y with additional term for vy
-  acc_cmd.y = kp * distY + kp_vy * (vy_desired - msg->y) + ki * integral_y * dT + kd * diff_y * this->FPS;
-
+  double acc_cmd_y = kp * distY + kp_vy * (vy_desired - msg->y) + ki * integral_y * dT + kd * diff_y * this->FPS;
+    acc_cmd_y = std::max(-35.0, acc_cmd_y);
+    acc_cmd_y = std::min(35.0,acc_cmd_y);
+    acc_cmd.y=acc_cmd_y;
   ROS_INFO("Accel ax: %f, ay: %f", acc_cmd.x, acc_cmd.y);
 
   pub_acc_cmd.publish(acc_cmd);
