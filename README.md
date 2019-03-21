@@ -1,3 +1,5 @@
+Forked from: https://github.com/JohsBL/flappy_automation_test
+
 # Flappy Bird Automation Game
 
 This repository contains the Flappy Bird game modified to be controlled with ROS.
