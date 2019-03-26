@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(flappy_automation_code)
 
 set (CMAKE_CXX_STANDARD 11)
+set(PCL_DIR "/usr/lib/x86_64-linux-gnu/cmake/pcl/")
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
